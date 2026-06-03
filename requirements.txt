@@ -1,0 +1,4 @@
+feedparser>=6.0.10
+anthropic>=0.39.0
+PyYAML>=6.0
+trafilatura>=1.12.0

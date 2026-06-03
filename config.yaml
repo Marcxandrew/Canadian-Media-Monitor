@@ -1,0 +1,172 @@
+# Canadian Media Morning Brief — configuration
+# Edit outlets, keywords, and recipients here without touching code.
+
+outlets:
+  anglophone_national:
+    - name: National Post
+      rss: https://nationalpost.com/feed/
+      language: en
+      region: national
+    - name: Financial Post
+      rss: https://financialpost.com/feed/
+      language: en
+      region: national
+    - name: Globe and Mail
+      rss: https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/canada/?outputType=xml
+      language: en
+      region: national
+    - name: The Hub
+      rss: https://thehub.ca/feed/
+      language: en
+      region: national
+    - name: CBC News
+      rss: https://www.cbc.ca/cmlink/rss-topstories
+      language: en
+      region: national
+
+  francophone:
+    - name: La Presse
+      rss: https://www.lapresse.ca/actualites/rss
+      language: fr
+      region: quebec
+    - name: Journal de Montréal
+      rss: https://www.journaldemontreal.com/rss.xml
+      language: fr
+      region: quebec
+    - name: Le Devoir - Politique
+      rss: https://www.ledevoir.com/rss/section/politique.xml
+      language: fr
+      region: quebec
+    - name: Le Devoir - Société
+      rss: https://www.ledevoir.com/rss/section/societe.xml
+      language: fr
+      region: quebec
+    - name: Radio-Canada
+      rss: https://ici.radio-canada.ca/rss/4159
+      language: fr
+      region: national
+
+  alberta:
+    - name: Calgary Herald
+      rss: https://calgaryherald.com/feed/
+      language: en
+      region: alberta
+    - name: Edmonton Journal
+      rss: https://edmontonjournal.com/feed/
+      language: en
+      region: alberta
+    - name: Western Standard
+      rss: https://www.westernstandard.news/feed
+      language: en
+      region: alberta
+    - name: CBC Calgary
+      rss: https://www.cbc.ca/cmlink/rss-canada-calgary
+      language: en
+      region: alberta
+    - name: CBC Edmonton
+      rss: https://www.cbc.ca/cmlink/rss-canada-edmonton
+      language: en
+      region: alberta
+
+# Topic keywords. An article is "matched" if any keyword appears in title or summary.
+# Add multi-word phrases for precision; single words cast a wider net.
+topics:
+  public_spending:
+    label: "Public Spending & Taxation"
+    keywords_en:
+      [budget, deficit, spending, fiscal, debt, taxpayer, treasury,
+       "public finance", "public funds", equalization, "carbon tax",
+       "tax cut", "tax hike", "fall economic statement", taxation,
+       "tax burden", "tax credit", "income tax", "corporate tax",
+       "GST", "HST", "capital gains"]
+    keywords_fr:
+      [budget, déficit, dépenses, fiscal, fiscalité, dette, contribuable,
+       "finances publiques", "fonds publics", péréquation,
+       "taxe carbone", "baisse d'impôt", "hausse d'impôt", impôt,
+       "crédit d'impôt", "gains en capital", TPS, TVQ]
+
+  energy:
+    label: "Energy"
+    keywords_en:
+      [oil, gas, pipeline, energy, oilsands, "oil sands", LNG, emissions,
+       carbon, "net-zero", "net zero", hydroelectric, "Hydro-Québec",
+       "energy transition", CER, AER, "Trans Mountain"]
+    keywords_fr:
+      [pétrole, gaz, pipeline, énergie, "sables bitumineux", GNL,
+       émissions, carbone, hydroélectrique, "Hydro-Québec",
+       "transition énergétique", "carboneutralité"]
+
+  housing:
+    label: "Housing"
+    keywords_en:
+      [housing, rent, mortgage, homebuilder, affordability, "real estate",
+       CMHC, zoning, density, "housing crisis", "housing supply",
+       homelessness, "housing starts", "home prices"]
+    keywords_fr:
+      [logement, loyer, hypothèque, abordabilité, immobilier, SCHL,
+       zonage, densité, "crise du logement", itinérance,
+       "mises en chantier", "prix des maisons"]
+
+  healthcare:
+    label: "Healthcare"
+    keywords_en:
+      [healthcare, "health care", hospital, doctor, nurse, "wait times",
+       medicare, pharmacare, "dental care", "mental health", "emergency room",
+       "ER closure", "family doctor"]
+    keywords_fr:
+      [santé, hôpital, médecin, infirmière, attente, "assurance maladie",
+       "assurance médicaments", "soins dentaires", "santé mentale", urgence,
+       "médecin de famille", CHSLD]
+
+  immigration:
+    label: "Immigration"
+    keywords_en:
+      [immigration, immigrant, refugee, asylum, newcomer, "permanent resident",
+       "temporary foreign worker", "study permit", citizenship, IRCC,
+       "Roxham Road"]
+    keywords_fr:
+      [immigration, immigrant, réfugié, asile, "nouvel arrivant",
+       "résident permanent", "travailleur étranger temporaire",
+       "permis d'études", citoyenneté, "chemin Roxham", "seuils d'immigration"]
+
+  ai_regulation:
+    label: "AI & Regulation"
+    keywords_en:
+      ["artificial intelligence", "AI regulation", "AI safety", "AI act",
+       AIDA, "C-27", "large language model", chatgpt, anthropic, openai,
+       "AI governance"]
+    keywords_fr:
+      ["intelligence artificielle", "réglementation de l'IA",
+       "sécurité de l'IA", "loi sur l'IA", "C-27", "modèle de langage",
+       "gouvernance de l'IA"]
+
+  affordability_cost_of_living:
+    label: "Affordability & Cost of Living"
+    keywords_en:
+      [affordability, "cost of living", inflation, groceries, "grocery prices",
+       "food prices", "food inflation", "consumer price", CPI, wages,
+       "real wages", "purchasing power", "household debt"]
+    keywords_fr:
+      [abordabilité, "coût de la vie", inflation, épicerie, "panier d'épicerie",
+       "prix des aliments", "prix à la consommation", IPC, salaires,
+       "salaire réel", "pouvoir d'achat", "endettement des ménages"]
+
+priority_regions: [alberta, quebec]
+
+email:
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  from_address: iedm.mediabrief@gmail.com
+  recipients:
+    - marcandrew.erian@gmail.com
+  subject_template: "Morning Media Brief — {date}"
+
+claude:
+  model: claude-sonnet-4-6
+  max_articles_per_call: 80
+  max_output_tokens: 4000
+
+filter:
+  lookback_hours: 24
+  min_relevant_articles: 3
+  fetch_full_text: false   # off by default — RSS summaries are enough for clippings

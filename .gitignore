@@ -1,0 +1,6 @@
+.env
+*.env
+run-brief.sh
+__pycache__/
+*.pyc
+.DS_Store
