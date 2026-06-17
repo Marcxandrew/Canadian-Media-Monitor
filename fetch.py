@@ -1,20 +1,18 @@
 """
 Fetches articles from configured RSS feeds, filters by recency and topic keywords.
-
 Many Canadian news sites block the default Python user agent, so we ask
 feedparser to identify itself as a normal browser.
 """
 from __future__ import annotations
-
 import logging
 import re
 import time
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 from typing import List
-
 import feedparser
 import yaml
+from nltk.stem import SnowballStemmer
 
 try:
     import trafilatura
@@ -31,6 +29,12 @@ USER_AGENT = (
     "Chrome/124.0.0.0 Safari/537.36"
 )
 feedparser.USER_AGENT = USER_AGENT
+
+# Stemmers for English and French — handle singular/plural automatically.
+_stemmers = {
+    "en": SnowballStemmer("english"),
+    "fr": SnowballStemmer("french"),
+}
 
 
 @dataclass
@@ -70,19 +74,39 @@ def _strip_html(text: str) -> str:
     return re.sub(r"<[^>]+>", "", text or "").strip()
 
 
+def _stem_phrase(phrase: str, language: str) -> str:
+    """Stem every token in a word or phrase so singular/plural both match."""
+    stemmer = _stemmers.get(language, _stemmers["en"])
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ]+", phrase.lower())
+    return " ".join(stemmer.stem(t) for t in tokens)
+
+
+def _stem_text(text: str, language: str) -> str:
+    """Stem all tokens in an article text block for matching."""
+    stemmer = _stemmers.get(language, _stemmers["en"])
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ]+", text.lower())
+    return " ".join(stemmer.stem(t) for t in tokens)
+
+
 def _match_topics(text: str, topics_cfg: dict, language: str) -> List[str]:
-    """Return list of topic names whose keywords appear in text."""
-    text_lower = text.lower()
+    """Return list of topic names whose keywords appear in text.
+    Uses stemming so singular and plural forms both match automatically.
+    """
+    stemmed_text = _stem_text(text, language)
     primary = f"keywords_{language}"
     matched: List[str] = []
+
     for topic_name, kw_cfg in topics_cfg.items():
         keywords = kw_cfg.get(primary, []) or kw_cfg.get("keywords_en", [])
         for kw in keywords:
-            kw_lower = kw.lower()
-            pattern = r"(?:^|\b)" + re.escape(kw_lower) + r"(?:\b|$)"
-            if re.search(pattern, text_lower):
+            stemmed_kw = _stem_phrase(kw, language)
+            if not stemmed_kw:
+                continue
+            pattern = r"(?<!\S)" + re.escape(stemmed_kw) + r"(?!\S)"
+            if re.search(pattern, stemmed_text):
                 matched.append(topic_name)
                 break
+
     return matched
 
 
@@ -131,9 +155,10 @@ def fetch_all(config: dict) -> List[Article]:
             log.warning("  no entries from %s (feed may have moved or be blocked)",
                         outlet["name"])
             continue
-        log.info("  %d total entries in feed", entry_count)
 
+        log.info("  %d total entries in feed", entry_count)
         outlet_hits = 0
+
         for entry in feed.entries:
             pub = _parse_published(entry)
             if not pub or pub < cutoff:
