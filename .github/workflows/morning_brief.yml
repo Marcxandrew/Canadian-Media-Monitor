@@ -2,9 +2,8 @@ name: Morning Media Brief
 
 on:
   schedule:
-    # 10:00 UTC = 5:00 AM EST (winter) / 6:00 AM EDT (summer).
-    # Runs every day of the week.
-    - cron: "0 10 * * *"
+    - cron: "15 10 * * *"   # 5:15 AM EST / 6:15 AM EDT
+    - cron: "15 11 * * *"   # 6:15 AM EST / 7:15 AM EDT
   workflow_dispatch: {}   # allow on-demand runs from the Actions tab
 
 jobs:
