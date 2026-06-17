@@ -75,17 +75,31 @@ def _strip_html(text: str) -> str:
 
 
 def _stem_phrase(phrase: str, language: str) -> str:
-    """Stem every token in a word or phrase so singular/plural both match."""
+    """Stem every token in a word or phrase so singular/plural both match.
+    Tokens containing numbers or hyphens (e.g. C-48) are kept as-is.
+    """
     stemmer = _stemmers.get(language, _stemmers["en"])
-    tokens = re.findall(r"[a-zA-ZÀ-ÿ]+", phrase.lower())
-    return " ".join(stemmer.stem(t) for t in tokens)
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ0-9][a-zA-ZÀ-ÿ0-9-]*", phrase.lower())
+    stemmed = []
+    for t in tokens:
+        if re.match(r"^[a-zA-ZÀ-ÿ]+$", t):
+            stemmed.append(stemmer.stem(t))
+        else:
+            stemmed.append(t)  # keep codes like c-48, c-69 intact
+    return " ".join(stemmed)
 
 
 def _stem_text(text: str, language: str) -> str:
     """Stem all tokens in an article text block for matching."""
     stemmer = _stemmers.get(language, _stemmers["en"])
-    tokens = re.findall(r"[a-zA-ZÀ-ÿ]+", text.lower())
-    return " ".join(stemmer.stem(t) for t in tokens)
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ0-9][a-zA-ZÀ-ÿ0-9-]*", text.lower())
+    stemmed = []
+    for t in tokens:
+        if re.match(r"^[a-zA-ZÀ-ÿ]+$", t):
+            stemmed.append(stemmer.stem(t))
+        else:
+            stemmed.append(t)
+    return " ".join(stemmed)
 
 
 def _match_topics(text: str, topics_cfg: dict, language: str) -> List[str]:
