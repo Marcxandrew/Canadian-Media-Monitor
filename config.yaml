@@ -367,6 +367,11 @@ email:
   from_address: iedm.mediabrief@gmail.com
   recipients:
     - marcandrew.erian@gmail.com
+    - rbrossard@iedm.org
+    - fplourde@iedm.org
+    - nradenkovic@iedm.org
+    - ppasschier@iedm.org
+    - ddufort@iedm.org
   subject_template: "Morning Media Brief — {date}"
 
 claude:
