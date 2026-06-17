@@ -1,6 +1,5 @@
 # Canadian Media Morning Brief — configuration
 # Edit outlets, keywords, and recipients here without touching code.
-
 outlets:
   anglophone_national:
     - name: National Post
@@ -23,7 +22,6 @@ outlets:
       rss: https://www.cbc.ca/cmlink/rss-topstories
       language: en
       region: national
-
   francophone:
     - name: La Presse
       rss: https://www.lapresse.ca/actualites/rss
@@ -45,7 +43,6 @@ outlets:
       rss: https://ici.radio-canada.ca/rss/4159
       language: fr
       region: national
-
   alberta:
     - name: Calgary Herald
       rss: https://calgaryherald.com/feed/
@@ -68,88 +65,299 @@ outlets:
       language: en
       region: alberta
 
-# Topic keywords. An article is "matched" if any keyword appears in title or summary.
-# Add multi-word phrases for precision; single words cast a wider net.
 topics:
   public_spending:
     label: "Public Spending & Taxation"
     keywords_en:
-      [budget, deficit, spending, fiscal, debt, taxpayer, treasury,
-       "public finance", "public funds", equalization, "carbon tax",
-       "tax cut", "tax hike", "fall economic statement", taxation,
-       "tax burden", "tax credit", "income tax", "corporate tax",
-       "GST", "HST", "capital gains"]
+      - budget
+      - deficit
+      - spending
+      - fiscal
+      - debt
+      - taxpayer
+      - taxpayers
+      - treasury
+      - subsidy
+      - subsidies
+      - "public finance"
+      - "public funds"
+      - equalization
+      - "carbon tax"
+      - "tax cut"
+      - "tax hike"
+      - "fall economic statement"
+      - taxation
+      - "tax burden"
+      - "tax credit"
+      - "income tax"
+      - "corporate tax"
+      - "GST"
+      - "HST"
+      - "capital gains"
+      - "repayable loan"
+      - "repayable loans"
+      - "government investment"
+      - "government investments"
+      - "industrial strategy"
+      - "industrial strategies"
+      - "François-Philippe Champagne"
+      - "Eric Girard"
     keywords_fr:
-      [budget, déficit, dépenses, fiscal, fiscalité, dette, contribuable,
-       "finances publiques", "fonds publics", péréquation,
-       "taxe carbone", "baisse d'impôt", "hausse d'impôt", impôt,
-       "crédit d'impôt", "gains en capital", TPS, TVQ]
+      - budget
+      - déficit
+      - dépenses
+      - fiscal
+      - fiscalité
+      - dette
+      - contribuable
+      - contribuables
+      - taxe
+      - taxes
+      - redevance
+      - redevances
+      - subvention
+      - subventions
+      - "prêt remboursable"
+      - "prêts remboursables"
+      - "prêt pardonnable"
+      - "prêts pardonnables"
+      - "finances publiques"
+      - "fonds publics"
+      - péréquation
+      - "taxe carbone"
+      - "baisse d'impôt"
+      - "hausse d'impôt"
+      - impôt
+      - "crédit d'impôt"
+      - "gains en capital"
+      - TPS
+      - TVQ
+      - "Investissement Québec"
+      - "investissement gouvernemental"
+      - "investissements gouvernementaux"
+      - "stratégie industrielle"
+      - "stratégies industrielles"
+      - "Bicha Ngo"
+      - "François-Philippe Champagne"
+      - "Eric Girard"
+      - "Bernard Drainville"
 
   energy:
     label: "Energy"
     keywords_en:
-      [oil, gas, pipeline, energy, oilsands, "oil sands", LNG, emissions,
-       carbon, "net-zero", "net zero", hydroelectric, "Hydro-Québec",
-       "energy transition", CER, AER, "Trans Mountain"]
+      - oil
+      - gas
+      - pipeline
+      - energy
+      - oilsands
+      - "oil sands"
+      - "tar sands"
+      - LNG
+      - emissions
+      - carbon
+      - "net-zero"
+      - "net zero"
+      - hydroelectric
+      - "Hydro-Québec"
+      - "energy transition"
+      - CER
+      - AER
+      - "Trans Mountain"
+      - "Ksi Lisims"
+      - Marinvest
+      - C-48
+      - C-69
+      - "tanker ban"
+      - "tanker bans"
+      - "ev-mandate"
+      - "electric vehicle"
+      - "electric vehicles"
     keywords_fr:
-      [pétrole, gaz, pipeline, énergie, "sables bitumineux", GNL,
-       émissions, carbone, hydroélectrique, "Hydro-Québec",
-       "transition énergétique", "carboneutralité"]
+      - pétrole
+      - gaz
+      - pipeline
+      - énergie
+      - "sables bitumineux"
+      - GNL
+      - émissions
+      - carbone
+      - hydroélectrique
+      - "Hydro-Québec"
+      - "transition énergétique"
+      - carboneutralité
+      - "pétro-gazier"
+      - "pétro-gaziers"
+      - "pétro-gazière"
+      - "pétro-gazières"
+      - fossile
+      - fossiles
+      - "Ksi Lisims"
+      - Marinvest
+      - C-48
+      - C-69
+      - "véhicule électrique"
+      - "véhicules électriques"
 
   housing:
     label: "Housing"
     keywords_en:
-      [housing, rent, mortgage, homebuilder, affordability, "real estate",
-       CMHC, zoning, density, "housing crisis", "housing supply",
-       homelessness, "housing starts", "home prices"]
+      - housing
+      - rent
+      - mortgage
+      - homebuilder
+      - affordability
+      - "real estate"
+      - CMHC
+      - zoning
+      - density
+      - "housing crisis"
+      - "housing supply"
+      - homelessness
+      - "housing starts"
+      - "home prices"
     keywords_fr:
-      [logement, loyer, hypothèque, abordabilité, immobilier, SCHL,
-       zonage, densité, "crise du logement", itinérance,
-       "mises en chantier", "prix des maisons"]
+      - logement
+      - loyer
+      - hypothèque
+      - abordabilité
+      - immobilier
+      - SCHL
+      - zonage
+      - densité
+      - "crise du logement"
+      - itinérance
+      - "mises en chantier"
+      - "prix des maisons"
 
   healthcare:
     label: "Healthcare"
     keywords_en:
-      [healthcare, "health care", hospital, doctor, nurse, "wait times",
-       medicare, pharmacare, "dental care", "mental health", "emergency room",
-       "ER closure", "family doctor"]
+      - healthcare
+      - "health care"
+      - hospital
+      - doctor
+      - nurse
+      - "wait times"
+      - medicare
+      - pharmacare
+      - "dental care"
+      - "mental health"
+      - "emergency room"
+      - "ER closure"
+      - "family doctor"
+      - "activity-based funding"
+      - "patient-focused funding"
+      - AHS
+      - pharmaceutical
+      - pharmaceuticals
+      - biopharmaceutical
+      - biopharmaceuticals
+      - "Canadian Health Act"
     keywords_fr:
-      [santé, hôpital, médecin, infirmière, attente, "assurance maladie",
-       "assurance médicaments", "soins dentaires", "santé mentale", urgence,
-       "médecin de famille", CHSLD]
-
-  immigration:
-    label: "Immigration"
-    keywords_en:
-      [immigration, immigrant, refugee, asylum, newcomer, "permanent resident",
-       "temporary foreign worker", "study permit", citizenship, IRCC,
-       "Roxham Road"]
-    keywords_fr:
-      [immigration, immigrant, réfugié, asile, "nouvel arrivant",
-       "résident permanent", "travailleur étranger temporaire",
-       "permis d'études", citoyenneté, "chemin Roxham", "seuils d'immigration"]
+      - santé
+      - hôpital
+      - médecin
+      - infirmière
+      - attente
+      - "assurance maladie"
+      - "assurance médicaments"
+      - "soins dentaires"
+      - "santé mentale"
+      - urgence
+      - "médecin de famille"
+      - CHSLD
+      - "financement à l'activité"
+      - "financement axé sur le patient"
+      - "Santé Québec"
+      - pharmaceutique
+      - pharmaceutiques
+      - biopharmaceutique
+      - biopharmaceutiques
+      - "Loi canadienne sur la santé"
 
   ai_regulation:
     label: "AI & Regulation"
     keywords_en:
-      ["artificial intelligence", "AI regulation", "AI safety", "AI act",
-       AIDA, "C-27", "large language model", chatgpt, anthropic, openai,
-       "AI governance"]
+      - "artificial intelligence"
+      - "AI regulation"
+      - "AI safety"
+      - "AI act"
+      - AIDA
+      - "C-27"
+      - "large language model"
+      - chatgpt
+      - anthropic
+      - openai
+      - "AI governance"
+      - MILA
+      - "Evan Solomon"
+      - innovation
+      - innovations
     keywords_fr:
-      ["intelligence artificielle", "réglementation de l'IA",
-       "sécurité de l'IA", "loi sur l'IA", "C-27", "modèle de langage",
-       "gouvernance de l'IA"]
+      - "intelligence artificielle"
+      - "réglementation de l'IA"
+      - "sécurité de l'IA"
+      - "loi sur l'IA"
+      - "C-27"
+      - "modèle de langage"
+      - "gouvernance de l'IA"
+      - MILA
+      - "Evan Solomon"
+      - innovation
+      - innovations
 
   affordability_cost_of_living:
     label: "Affordability & Cost of Living"
     keywords_en:
-      [affordability, "cost of living", inflation, groceries, "grocery prices",
-       "food prices", "food inflation", "consumer price", CPI, wages,
-       "real wages", "purchasing power", "household debt"]
+      - affordability
+      - "cost of living"
+      - inflation
+      - groceries
+      - "grocery prices"
+      - "food prices"
+      - "food inflation"
+      - "consumer price"
+      - CPI
+      - wages
+      - "real wages"
+      - "purchasing power"
+      - "household debt"
     keywords_fr:
-      [abordabilité, "coût de la vie", inflation, épicerie, "panier d'épicerie",
-       "prix des aliments", "prix à la consommation", IPC, salaires,
-       "salaire réel", "pouvoir d'achat", "endettement des ménages"]
+      - abordabilité
+      - "coût de la vie"
+      - inflation
+      - épicerie
+      - "panier d'épicerie"
+      - "prix des aliments"
+      - "prix à la consommation"
+      - IPC
+      - salaires
+      - "salaire réel"
+      - "pouvoir d'achat"
+      - "endettement des ménages"
+
+  trade:
+    label: "Trade"
+    keywords_en:
+      - tariff
+      - tariffs
+      - "customs duties"
+      - "interprovincial trade"
+      - trade
+      - commerce
+      - "free trade"
+      - CUSMA
+      - USMCA
+    keywords_fr:
+      - "tarif douanier"
+      - "tarifs douaniers"
+      - "droit de douane"
+      - "droits de douane"
+      - "commerce interprovincial"
+      - commerce
+      - "libre-échange"
+      - ACEUM
+      - ACÉUM
 
 priority_regions: [alberta, quebec]
 
@@ -159,11 +367,6 @@ email:
   from_address: iedm.mediabrief@gmail.com
   recipients:
     - marcandrew.erian@gmail.com
-    - fplourde@iedm.org
-    - rbrossard@iedm.org
-    - nradenkovic@iedm.org
-    - ppasschier@iedm.org
-    - ddufort@iedm.org
   subject_template: "Morning Media Brief — {date}"
 
 claude:
