@@ -377,7 +377,7 @@ email:
 claude:
   model: claude-sonnet-4-6
   max_articles_per_call: 80
-  max_output_tokens: 4000
+  max_output_tokens: 8000
 
 filter:
   lookback_hours: 24
