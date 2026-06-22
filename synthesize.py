@@ -47,13 +47,7 @@ HARD RULES — these are non-negotiable:
 6. SUMMARY LENGTH — STRICT LIMIT: Every summary must be EXACTLY 3 sentences. No more. Never 4, never 5. Three sentences only. If you write more than 3 sentences for any article, you have failed this instruction.
 7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional.
 
-EXCLUSION FILTER — silently skip any article that falls into these categories. Do not mention exclusions, do not explain your reasoning, do not output anything other than the final HTML:
-- Foreign policy stories unless they directly concern Canadian trade, tariffs, CUSMA, or market access for Canadian goods
-- US Treasury, bond markets, or US monetary policy unless the article explicitly connects it to Canadian inflation, interest rates, or Canadian trade
-- US or international politics unless Canada or CUSMA is a central subject of the article
-- Police, crime, homicide, or public safety stories
-- Homelessness stories unless directly tied to a housing policy or spending debate
-- Any story with no clear economic or policy angle relevant to Canada"""
+Do not output any reasoning or explanation. Output ONLY the final HTML, nothing else."""
 
 
 USER_PROMPT_TEMPLATE = """Today is {date}.
