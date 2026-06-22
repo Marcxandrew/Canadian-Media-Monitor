@@ -102,6 +102,17 @@ def _stem_text(text: str, language: str) -> str:
     return " ".join(stemmed)
 
 
+def _is_excluded(text: str, exclude_keywords: list) -> bool:
+    """Return True if the article matches any exclusion keyword and should be dropped."""
+    text_lower = text.lower()
+    for kw in exclude_keywords:
+        kw_lower = kw.lower()
+        pattern = r"(?<!\S)" + re.escape(kw_lower) + r"(?!\S)"
+        if re.search(pattern, text_lower):
+            return True
+    return False
+
+
 def _match_topics(text: str, topics_cfg: dict, language: str) -> List[str]:
     """Return list of topic names whose keywords appear in text.
     Uses stemming so singular and plural forms both match automatically.
@@ -150,6 +161,7 @@ def fetch_all(config: dict) -> List[Article]:
     cutoff = datetime.now(timezone.utc) - lookback
     topics_cfg = config["topics"]
     fetch_full = config["filter"].get("fetch_full_text", True)
+    exclude_kws = config.get("exclude_keywords", [])
 
     all_outlets = []
     for group in config["outlets"].values():
@@ -181,6 +193,9 @@ def fetch_all(config: dict) -> List[Article]:
             title = _strip_html(getattr(entry, "title", ""))
             summary = _strip_html(getattr(entry, "summary", ""))
             combined = f"{title}\n{summary}"
+
+            if exclude_kws and _is_excluded(combined, exclude_kws):
+                continue
 
             matched = _match_topics(combined, topics_cfg, outlet["language"])
             if not matched:
