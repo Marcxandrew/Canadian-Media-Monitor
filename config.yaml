@@ -361,6 +361,40 @@ topics:
 
 priority_regions: [alberta, quebec]
 
+# Articles are automatically excluded if their title or summary contains ANY of these terms.
+# This runs before keyword matching — excluded articles never reach Claude.
+exclude_keywords:
+  # Crime & police
+  - police
+  - shooting
+  - homicide
+  - murder
+  - assault
+  - stabbing
+  - gunshot
+  - gunfire
+  - ASIRT
+  - "officer-involved"
+  - "officer involved"
+  - fusillade
+  - meurtre
+  - "faits divers"
+  - "coups de feu"
+  - agression
+  # Sports
+  - NHL
+  - LNH
+  - NBA
+  - CFL
+  - MLS
+  - NFL
+  - "Stanley Cup"
+  - "Coupe Stanley"
+  - "Grey Cup"
+  - "Memorial Cup"
+  - roster
+  - "player trade"
+
 email:
   smtp_host: smtp.gmail.com
   smtp_port: 587
