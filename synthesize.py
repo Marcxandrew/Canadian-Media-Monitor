@@ -47,12 +47,12 @@ HARD RULES — these are non-negotiable:
 6. SUMMARY LENGTH — STRICT LIMIT: Every summary must be EXACTLY 3 sentences. No more. Never 4, never 5. Three sentences only. If you write more than 3 sentences for any article, you have failed this instruction.
 7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional.
 
-EXCLUDE THE FOLLOWING — do not include these articles even if they have a URL:
+EXCLUSION FILTER — silently skip any article that falls into these categories. Do not mention exclusions, do not explain your reasoning, do not output anything other than the final HTML:
 - Foreign policy stories unless they directly concern Canadian trade, tariffs, CUSMA, or market access for Canadian goods
-- US Treasury, bond markets, or US monetary policy unless the article explicitly connects it to Canadian inflation, interest rates, or trade
+- US Treasury, bond markets, or US monetary policy unless the article explicitly connects it to Canadian inflation, interest rates, or Canadian trade
 - US or international politics unless Canada or CUSMA is a central subject of the article
 - Police, crime, homicide, or public safety stories
-- Homelessness stories (unless directly tied to a housing policy or spending debate)
+- Homelessness stories unless directly tied to a housing policy or spending debate
 - Any story with no clear economic or policy angle relevant to Canada"""
 
 
@@ -82,7 +82,7 @@ RULES FOR ASSEMBLY:
 - If an article matches multiple topics, place it under the topic where it fits best — do not duplicate it.
 - For the "Published time" line, render the article's timestamp as a friendly relative time in Eastern Time (e.g., "today 8:30 AM ET", "yesterday 6:15 PM ET").
 - Capitalize region as "Quebec", "Alberta", or "National".
-- You MUST include every article in the input list. Do not skip or omit any article. Every article that has a URL must appear in the output.
+- Include every article that passes the exclusion filter above and has a URL. Do not skip eligible articles.
 - Never include articles whose URL is missing.
 - Output nothing else — no intro paragraph, no closing note, no list of sources at the end. The clipping list IS the brief."""
 
