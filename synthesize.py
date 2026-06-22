@@ -45,7 +45,15 @@ HARD RULES — these are non-negotiable:
 4. Include 1-2 key figures or statistics per summary when the article contains them — dollar amounts, percentages, headcounts, dates. Skip if the article is qualitative.
 5. Write each summary in the same language as the article. French articles get French summaries; English articles get English summaries. Do not translate.
 6. SUMMARY LENGTH — STRICT LIMIT: Every summary must be EXACTLY 3 sentences. No more. Never 4, never 5. Three sentences only. If you write more than 3 sentences for any article, you have failed this instruction.
-7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional."""
+7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional.
+
+EXCLUDE THE FOLLOWING — do not include these articles even if they have a URL:
+- Foreign policy stories unless they directly concern Canadian trade, tariffs, CUSMA, or market access for Canadian goods
+- US Treasury, bond markets, or US monetary policy unless the article explicitly connects it to Canadian inflation, interest rates, or trade
+- US or international politics unless Canada or CUSMA is a central subject of the article
+- Police, crime, homicide, or public safety stories
+- Homelessness stories (unless directly tied to a housing policy or spending debate)
+- Any story with no clear economic or policy angle relevant to Canada"""
 
 
 USER_PROMPT_TEMPLATE = """Today is {date}.
@@ -128,4 +136,3 @@ def synthesize(articles: List[Article], model: str, max_tokens: int = 4000,
         brief = brief.rsplit("```", 1)[0].strip()
 
     return brief
-
