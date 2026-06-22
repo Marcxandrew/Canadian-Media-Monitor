@@ -133,6 +133,14 @@ def _matches_topic(stemmed_en: list[str], stemmed_fr: list[str], keywords: list)
 
 
 # ---------------------------------------------------------------------------
+# Config loader (imported by main.py)
+# ---------------------------------------------------------------------------
+def load_config(config_path: str = "config.yml") -> dict:
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+# ---------------------------------------------------------------------------
 # Main fetch function
 # ---------------------------------------------------------------------------
 def fetch_all(config_path: str = "config.yml") -> List[Article]:
