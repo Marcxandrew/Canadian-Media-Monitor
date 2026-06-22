@@ -16,6 +16,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional
 
 import feedparser
@@ -136,7 +137,11 @@ def _matches_topic(stemmed_en: list[str], stemmed_fr: list[str], keywords: list)
 # Config loader (imported by main.py)
 # ---------------------------------------------------------------------------
 def load_config(config_path: str = "config.yml") -> dict:
-    with open(config_path, "r", encoding="utf-8") as f:
+    # Resolve relative paths against the repo root (same directory as this file)
+    path = Path(config_path)
+    if not path.is_absolute():
+        path = Path(__file__).parent / config_path
+    with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -144,8 +149,7 @@ def load_config(config_path: str = "config.yml") -> dict:
 # Main fetch function
 # ---------------------------------------------------------------------------
 def fetch_all(config_path: str = "config.yml") -> List[Article]:
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+    config = load_config(config_path)
 
     outlets_cfg = config.get("outlets", {})
     topics_cfg = config.get("topics", {})
