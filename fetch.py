@@ -238,18 +238,8 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 if not matched_topics:
                     continue  # doesn't match any monitored topic
 
-                # ── STEP 3: FULL TEXT (optional) ──────────────────────────
-                full_text: Optional[str] = None
-                try:
-                    import trafilatura
-                    downloaded = trafilatura.fetch_url(url)
-                    if downloaded:
-                        extracted = trafilatura.extract(downloaded)
-                        if extracted:
-                            full_text = extracted[:800]
-                except Exception:
-                    pass  # fall back to RSS summary silently
-
+                # Full text fetching removed — RSS summary is sufficient for Claude
+                # and trafilatura adds significant latency (2-5s per article).
                 seen_ids.add(art_id)
                 articles.append(
                     Article(
@@ -261,7 +251,7 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                         published=published,
                         summary=rss_summary[:800],
                         matched_topics=matched_topics,
-                        full_text=full_text,
+                        full_text=None,
                     )
                 )
 
