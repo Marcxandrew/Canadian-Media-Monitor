@@ -148,8 +148,12 @@ def load_config(config_path: str = "config.yml") -> dict:
 # ---------------------------------------------------------------------------
 # Main fetch function
 # ---------------------------------------------------------------------------
-def fetch_all(config_path: str = "config.yml") -> List[Article]:
-    config = load_config(config_path)
+def fetch_all(config_path="config.yml") -> List[Article]:
+    # Accept either an already-loaded config dict or a file path string
+    if isinstance(config_path, dict):
+        config = config_path
+    else:
+        config = load_config(config_path)
 
     outlets_cfg = config.get("outlets", {})
     topics_cfg = config.get("topics", {})
