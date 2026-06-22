@@ -44,7 +44,7 @@ HARD RULES — these are non-negotiable:
 3. For genuinely empirical or neutral stories (e.g., Stats Canada data drops with no obvious policy angle), summarize plainly. Do not force a lens onto facts that don't invite one.
 4. Include 1-2 key figures or statistics per summary when the article contains them — dollar amounts, percentages, headcounts, dates. Skip if the article is qualitative.
 5. Summaries are always in English. If the article is in French, you still write the summary in English. You may include one short French phrase in quotes if its specific wording is revealing (e.g., a minister's exact words).
-6. Keep summaries to 3-4 sentences. Tight, scannable, factual.
+6. SUMMARY LENGTH — STRICT LIMIT: Every summary must be EXACTLY 3 sentences. No more. Never 4, never 5. Three sentences only. If you write more than 3 sentences for any article, you have failed this instruction.
 7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional."""
 
 
@@ -65,12 +65,12 @@ Produce ONLY the inner HTML for an email body (no <html>, <head>, <body>, no mar
 <div style="margin-bottom:18px;">
   <p style="margin:0 0 4px 0;"><a href="ARTICLE_URL" style="color:#0a58ca;text-decoration:none;font-weight:600;">Article Headline Here</a></p>
   <p style="margin:0 0 6px 0;color:#888;font-size:12px;">Outlet Name · Published time (e.g., "today 8:30 AM" or "yesterday 6:15 PM") · Region</p>
-  <p style="margin:0;">Three to four sentence summary here, applying the lens where natural, plain where not. Include key figures when present.</p>
+  <p style="margin:0;">Exactly 3 sentences. No more, no less. Apply the lens where natural, plain where not.</p>
 </div>
 
 RULES FOR ASSEMBLY:
 - Show topics in this order, skipping any with zero articles:
-  Public Spending & Taxation, Energy, Housing, Healthcare, Immigration, AI & Regulation, Affordability & Cost of Living.
+  Public Spending & Taxation, Energy, Housing, Healthcare, AI & Regulation, Affordability & Cost of Living, Trade.
 - If an article matches multiple topics, place it under the topic where it fits best — do not duplicate it.
 - For the "Published time" line, render the article's timestamp as a friendly relative time in Eastern Time (e.g., "today 8:30 AM ET", "yesterday 6:15 PM ET").
 - Capitalize region as "Quebec", "Alberta", or "National".
@@ -85,7 +85,8 @@ def synthesize(articles: List[Article], model: str, max_tokens: int = 4000,
 
     payload = []
     for a in articles:
-        # Prefer full body when we have it; fall back to RSS summary
+        # Prefer full body when we have it; fall back to RSS summary.
+        # 800 chars is plenty for a 3-sentence summary and keeps the payload small.
         body = a.full_text or a.summary
         payload.append({
             "outlet": a.outlet,
@@ -95,7 +96,7 @@ def synthesize(articles: List[Article], model: str, max_tokens: int = 4000,
             "url": a.url,
             "published": a.published,
             "matched_topics": a.matched_topics,
-            "content": body[:2000],
+            "content": body[:800],
         })
 
     labels_payload = topic_labels or {}
