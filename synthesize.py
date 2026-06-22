@@ -4,7 +4,7 @@ Sends filtered articles to the Claude API and returns an HTML clipping brief.
 Format: articles grouped by topic. For each article:
 - Headline (clickable)
 - Outlet · published time · region
-- 3-4 sentence summary in English (even if source is French)
+- 3 sentence summary (in the article's original language)
 
 Editorial lens: classical-liberal / IEDM-style. Facts are facts; the lens shows
 up in what context is added (opportunity cost, market alternatives, decentralization
@@ -43,7 +43,7 @@ HARD RULES — these are non-negotiable:
    - Surface trade-offs: "Affordability gains for X may come at the cost of Y for Z."
 3. For genuinely empirical or neutral stories (e.g., Stats Canada data drops with no obvious policy angle), summarize plainly. Do not force a lens onto facts that don't invite one.
 4. Include 1-2 key figures or statistics per summary when the article contains them — dollar amounts, percentages, headcounts, dates. Skip if the article is qualitative.
-5. Summaries are always in English. If the article is in French, you still write the summary in English. You may include one short French phrase in quotes if its specific wording is revealing (e.g., a minister's exact words).
+5. Write each summary in the same language as the article. French articles get French summaries; English articles get English summaries. Do not translate.
 6. SUMMARY LENGTH — STRICT LIMIT: Every summary must be EXACTLY 3 sentences. No more. Never 4, never 5. Three sentences only. If you write more than 3 sentences for any article, you have failed this instruction.
 7. Do not editorialize beyond the lens described above. No partisan attacks, no rhetoric, no political punditry. Calm, analytical, professional."""
 
@@ -74,6 +74,7 @@ RULES FOR ASSEMBLY:
 - If an article matches multiple topics, place it under the topic where it fits best — do not duplicate it.
 - For the "Published time" line, render the article's timestamp as a friendly relative time in Eastern Time (e.g., "today 8:30 AM ET", "yesterday 6:15 PM ET").
 - Capitalize region as "Quebec", "Alberta", or "National".
+- You MUST include every article in the input list. Do not skip or omit any article. Every article that has a URL must appear in the output.
 - Never include articles whose URL is missing.
 - Output nothing else — no intro paragraph, no closing note, no list of sources at the end. The clipping list IS the brief."""
 
@@ -127,3 +128,4 @@ def synthesize(articles: List[Article], model: str, max_tokens: int = 4000,
         brief = brief.rsplit("```", 1)[0].strip()
 
     return brief
+
