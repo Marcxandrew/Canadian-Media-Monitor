@@ -21,10 +21,11 @@ priority_regions:
 # ── Email delivery ──────────────────────────────────────────
 email:
   subject_template: "Morning Media Brief — {date}"
+  from_address: "iedm.mediabrief@gmail.com"
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
   recipients:
     - marcandrew.erian@gmail.com
-    # Add more recipients below:
-    # - colleague@iedm.org
 
 # ── Exclusion keywords ──────────────────────────────────────
 # Articles whose title OR RSS summary contains any of these
