@@ -5,14 +5,14 @@ Pipeline:
   1. Parse each outlet's RSS feed
   2. EXCLUDE articles matching exclude_keywords (police, sports, etc.)
   3. Match remaining articles against topic keywords (with stemming for singular/plural)
-  4. Optionally fetch full article text via trafilatura
-  5. Return de-duplicated Article list
+  4. Return de-duplicated Article list
 """
 from __future__ import annotations
 
 import hashlib
 import logging
 import re
+import socket
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -21,6 +21,9 @@ from typing import List, Optional
 
 import feedparser
 import yaml
+
+# No RSS feed should take longer than 10 seconds to respond
+socket.setdefaulttimeout(10)
 
 log = logging.getLogger(__name__)
 
@@ -184,7 +187,11 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 continue
 
             try:
-                feed = feedparser.parse(feed_url)
+                feed = feedparser.parse(feed_url, agent="Mozilla/5.0", request_headers={"Connection": "close"})
+                # feedparser doesn't natively timeout; skip feed if it returned no entries and no bozo
+                if not feed.entries and feed.get("bozo"):
+                    log.warning("Bad feed for %s, skipping.", outlet_name)
+                    continue
             except Exception as exc:
                 log.warning("Failed to parse feed for %s: %s", outlet_name, exc)
                 continue
@@ -238,8 +245,7 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 if not matched_topics:
                     continue  # doesn't match any monitored topic
 
-                # Full text fetching removed — RSS summary is sufficient for Claude
-                # and trafilatura adds significant latency (2-5s per article).
+                # RSS summary is used directly — no full-text fetching.
                 seen_ids.add(art_id)
                 articles.append(
                     Article(
