@@ -1,71 +1,431 @@
-"""Entry point. Orchestrates fetch -> synthesize -> email."""
-from __future__ import annotations
+# ============================================================
+# Canadian Media Monitor — Configuration
+# ============================================================
 
-import logging
-import sys
+# ── Claude settings ─────────────────────────────────────────
+claude:
+  model: claude-sonnet-4-6
+  max_output_tokens: 8000
+  max_articles_per_call: 40
 
-from fetch import fetch_all, load_config
-from synthesize import synthesize
-from email_sender import send_brief
+# ── Filter settings ─────────────────────────────────────────
+filter:
+  min_relevant_articles: 3   # skip email if fewer than this many articles matched
 
+# ── Priority regions (kept first if article cap is hit) ─────
+priority_regions:
+  - Quebec
+  - National
+  - Alberta
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
-log = logging.getLogger(__name__)
+# ── Email delivery ──────────────────────────────────────────
+email:
+  subject: "Morning Media Brief"
+  recipients:
+    - marcandrew.erian@gmail.com
+    # Add more recipients below:
+    # - colleague@iedm.org
 
+# ── Exclusion keywords ──────────────────────────────────────
+# Articles whose title OR RSS summary contains any of these
+# are dropped before topic matching — they never reach Claude.
+exclude_keywords:
+  # Crime & police
+  - police
+  - shooting
+  - homicide
+  - murder
+  - assault
+  - stabbing
+  - gunshot
+  - gunfire
+  - ASIRT
+  - "officer-involved"
+  - "officer involved"
+  - fusillade
+  - meurtre
+  - "faits divers"
+  - "coups de feu"
+  - agression
+  # Sports
+  - NHL
+  - LNH
+  - NBA
+  - CFL
+  - MLS
+  - NFL
+  - "Stanley Cup"
+  - "Coupe Stanley"
+  - "Grey Cup"
+  - "Memorial Cup"
+  - roster
+  - "player trade"
 
-def _prioritize(articles, priority_regions, cap):
-    """If we have too many articles for one prompt, keep priority regions first."""
-    if len(articles) <= cap:
-        return articles
-    priority_set = set(priority_regions)
-    articles.sort(
-        key=lambda a: (0 if a.region in priority_set else 1, a.published),
-        reverse=False,
-    )
-    log.info("Capping %d articles to %d (priority: %s)",
-             len(articles), cap, ", ".join(priority_regions))
-    return articles[:cap]
+# ── News outlets ────────────────────────────────────────────
+outlets:
 
+  anglophone_national:
+    - name: "Globe and Mail"
+      feed: "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/politics/"
+      language: english
+    - name: "Globe and Mail – Business"
+      feed: "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/"
+      language: english
+    - name: "National Post"
+      feed: "https://nationalpost.com/feed"
+      language: english
+    - name: "Financial Post"
+      feed: "https://financialpost.com/feed"
+      language: english
+    - name: "Toronto Star"
+      feed: "https://www.thestar.com/content/thestar/feed.RSSManagerServlet.articles.topstories.rss"
+      language: english
+    - name: "CBC News"
+      feed: "https://www.cbc.ca/cmlink/rss-politics"
+      language: english
+    - name: "CBC News – Business"
+      feed: "https://www.cbc.ca/cmlink/rss-business"
+      language: english
+    - name: "The Hub"
+      feed: "https://thehub.ca/feed/"
+      language: english
+    - name: "iPolitics"
+      feed: "https://ipolitics.ca/feed/"
+      language: english
 
-def main() -> int:
-    config = load_config()
+  francophone:
+    - name: "La Presse"
+      feed: "https://www.lapresse.ca/actualites/rss"
+      language: french
+    - name: "La Presse – Affaires"
+      feed: "https://www.lapresse.ca/affaires/rss"
+      language: french
+    - name: "Le Devoir"
+      feed: "https://www.ledevoir.com/rss/manchettes.xml"
+      language: french
+    - name: "Journal de Montréal"
+      feed: "https://www.journaldemontreal.com/rss/manchettes"
+      language: french
+    - name: "Journal de Québec"
+      feed: "https://www.journaldequebec.com/rss/manchettes"
+      language: french
+    - name: "Radio-Canada"
+      feed: "https://ici.radio-canada.ca/rss/4159"
+      language: french
+    - name: "Les Affaires"
+      feed: "https://www.lesaffaires.com/rss"
+      language: french
+    - name: "Le Soleil"
+      feed: "https://www.lesoleil.com/rss"
+      language: french
 
-    articles = fetch_all(config)
-    min_required = config["filter"]["min_relevant_articles"]
-    if len(articles) < min_required:
-        log.warning("Only %d relevant articles (min %d). Skipping email.",
-                    len(articles), min_required)
-        return 0
+  alberta:
+    - name: "Calgary Herald"
+      feed: "https://calgaryherald.com/feed"
+      language: english
+    - name: "Edmonton Journal"
+      feed: "https://edmontonjournal.com/feed"
+      language: english
+    - name: "CBC Calgary"
+      feed: "https://www.cbc.ca/cmlink/rss-canada-calgary"
+      language: english
+    - name: "Western Standard"
+      feed: "https://www.westernstandard.news/feed/"
+      language: english
 
-    articles = _prioritize(
-        articles,
-        config["priority_regions"],
-        config["claude"]["max_articles_per_call"],
-    )
+# ── Topics & keywords ────────────────────────────────────────
+# Each topic needs a "label" (shown as the email section header)
+# and a "keywords" list. Stemming handles singular/plural automatically.
+topics:
 
-    # Build {topic_key: pretty_label} map for the prompt
-    topic_labels = {
-        key: cfg.get("label", key.replace("_", " ").title())
-        for key, cfg in config["topics"].items()
-    }
+  public_spending:
+    label: "Public Spending & Taxation"
+    keywords:
+      - budget
+      - deficit
+      - déficit
+      - fiscal
+      - tax
+      - impôt
+      - taxe
+      - taxation
+      - government spending
+      - dépense publique
+      - federal spending
+      - national debt
+      - dette nationale
+      - public debt
+      - dette publique
+      - CPP
+      - RPC
+      - EI
+      - assurance-emploi
+      - subsidy
+      - subvention
+      - crown corporation
+      - société d'État
+      - privatization
+      - privatisation
+      - deregulation
+      - déréglementation
+      - regulation
+      - réglementation
+      - public sector
+      - secteur public
+      - transfer payment
+      - paiement de transfert
+      - equalization
+      - péréquation
+      - spending cut
+      - coupes budgétaires
+      - austerity
+      - austérité
 
-    brief_html = synthesize(
-        articles,
-        model=config["claude"]["model"],
-        max_tokens=config["claude"]["max_output_tokens"],
-        topic_labels=topic_labels,
-    )
+  energy:
+    label: "Energy"
+    keywords:
+      - oil
+      - pétrole
+      - natural gas
+      - gaz naturel
+      - pipeline
+      - LNG
+      - GNL
+      - carbon tax
+      - taxe carbone
+      - carbon price
+      - prix du carbone
+      - Hydro-Québec
+      - electricity
+      - électricité
+      - energy
+      - énergie
+      - clean energy
+      - énergie propre
+      - renewable energy
+      - énergie renouvelable
+      - nuclear
+      - nucléaire
+      - oil sands
+      - oilsands
+      - sables bitumineux
+      - Trans Mountain
+      - TMX
+      - refinery
+      - raffinerie
+      - fossil fuel
+      - combustible fossile
+      - emission
+      - émission
+      - decarbonization
+      - décarbonisation
+      - energy transition
+      - transition énergétique
+      - Enbridge
+      - TC Energy
+      - Suncor
+      - wind power
+      - solar power
+      - éolien
+      - solaire
 
-    n_outlets_monitored = sum(len(v) for v in config["outlets"].values())
-    send_brief(brief_html, config,
-               n_articles=len(articles),
-               n_outlets=n_outlets_monitored)
-    return 0
+  housing:
+    label: "Housing"
+    keywords:
+      - housing
+      - logement
+      - real estate
+      - immobilier
+      - rent
+      - loyer
+      - mortgage
+      - hypothèque
+      - construction cost
+      - coût de construction
+      - zoning
+      - zonage
+      - condo
+      - affordable housing
+      - logement abordable
+      - housing crisis
+      - crise du logement
+      - first-time buyer
+      - acheteur
+      - developer
+      - promoteur
+      - property tax
+      - taxe foncière
+      - home price
+      - prix des maisons
+      - rental market
+      - marché locatif
+      - CMHC
+      - SHQ
+      - building permit
+      - permis de construction
+      - densification
+      - housing supply
+      - offre de logement
 
+  healthcare:
+    label: "Healthcare"
+    keywords:
+      - healthcare
+      - santé
+      - hospital
+      - hôpital
+      - wait time
+      - délai d'attente
+      - surgery
+      - chirurgie
+      - pharmacare
+      - dental care
+      - soins dentaires
+      - RAMQ
+      - Medicare
+      - nurse
+      - infirmière
+      - infirmier
+      - doctor
+      - médecin
+      - physician
+      - private healthcare
+      - santé privée
+      - public health
+      - santé publique
+      - health spending
+      - dépense en santé
+      - health transfer
+      - transfert en santé
+      - emergency room
+      - urgence
+      - long-term care
+      - soin de longue durée
+      - mental health
+      - santé mentale
+      - drug price
+      - prix des médicaments
+      - health insurance
+      - assurance maladie
+      - OHIP
+      - clinic
+      - clinique
 
-if __name__ == "__main__":
-    sys.exit(main())
+  ai_regulation:
+    label: "AI & Regulation"
+    keywords:
+      - artificial intelligence
+      - intelligence artificielle
+      - "AI"
+      - "IA"
+      - tech regulation
+      - réglementation technologique
+      - C-27
+      - privacy law
+      - loi sur la vie privée
+      - data protection
+      - protection des données
+      - digital policy
+      - politique numérique
+      - algorithm
+      - algorithme
+      - machine learning
+      - automation
+      - automatisation
+      - digital economy
+      - économie numérique
+      - big tech
+      - platform regulation
+      - réglementation des plateformes
+      - AI strategy
+      - stratégie IA
+      - generative AI
+      - IA générative
+      - copyright
+      - droit d'auteur
+      - C-18
+      - online news
+      - nouvelles en ligne
+      - streaming
+      - Netflix tax
+      - taxe Netflix
+      - dynamic pricing
+      - prix dynamique
+
+  affordability_cost_of_living:
+    label: "Affordability & Cost of Living"
+    keywords:
+      - inflation
+      - cost of living
+      - coût de la vie
+      - grocery
+      - épicerie
+      - food price
+      - prix alimentaire
+      - affordability
+      - affordabilité
+      - consumer price
+      - indice des prix
+      - household budget
+      - budget des ménages
+      - interest rate
+      - taux d'intérêt
+      - Bank of Canada
+      - Banque du Canada
+      - supply management
+      - gestion de l'offre
+      - dairy
+      - lait
+      - poultry
+      - volaille
+      - grocery chain
+      - chaîne alimentaire
+      - shrinkflation
+      - price gouging
+      - abus de prix
+      - living wage
+      - salaire minimum
+      - purchasing power
+      - pouvoir d'achat
+      - debt load
+      - endettement
+
+  trade:
+    label: "Trade"
+    keywords:
+      - CUSMA
+      - USMCA
+      - ALENA
+      - NAFTA
+      - tariff
+      - tarif douanier
+      - trade war
+      - guerre commerciale
+      - trade deal
+      - accord commercial
+      - trade agreement
+      - accord de libre-échange
+      - export
+      - exportation
+      - import
+      - importation
+      - protectionism
+      - protectionnisme
+      - trade diversification
+      - diversification commerciale
+      - trade dispute
+      - différend commercial
+      - countermeasure
+      - contre-mesure
+      - softwood lumber
+      - bois d'oeuvre
+      - supply chain
+      - chaîne d'approvisionnement
+      - trade barrier
+      - barrière commerciale
+      - free trade
+      - libre-échange
+      - WTO
+      - OMC
+      - Trump
+      - sanction
