@@ -20,7 +20,7 @@ priority_regions:
 
 # ── Email delivery ──────────────────────────────────────────
 email:
-  subject: "Morning Media Brief"
+  subject_template: "Morning Media Brief — {date}"
   recipients:
     - marcandrew.erian@gmail.com
     # Add more recipients below:
