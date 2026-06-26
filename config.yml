@@ -26,7 +26,9 @@ email:
   smtp_port: 587
   recipients:
     - marcandrew.erian@gmail.com
-
+    - rbrossard@iedm.org
+    - nradenkovic@iedm.org
+    - fplourde@iedm.org
 # ── Exclusion keywords ──────────────────────────────────────
 # Articles whose title OR RSS summary contains any of these
 # are dropped before topic matching — they never reach Claude.
