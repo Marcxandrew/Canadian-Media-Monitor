@@ -1,14 +1,13 @@
 """
 RSS fetching, keyword matching, and article de-duplication.
-
 Pipeline:
   1. Parse each outlet's RSS feed
   2. EXCLUDE articles matching exclude_keywords (police, sports, etc.)
-  3. Match remaining articles against topic keywords (with stemming for singular/plural)
-  4. Return de-duplicated Article list
+  3. CANADA FILTER — drop articles with no Canadian angle
+  4. Match remaining articles against topic keywords (with stemming for singular/plural)
+  5. Return de-duplicated Article list
 """
 from __future__ import annotations
-
 import hashlib
 import logging
 import re
@@ -18,7 +17,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
-
 import feedparser
 import yaml
 
@@ -50,9 +48,9 @@ except ImportError:
 
 # Tokenizer: keeps alphanumeric + hyphens so "C-48" stays "c-48"
 _TOKEN_RE = re.compile(r"[a-zA-ZÀ-ÿ0-9][a-zA-ZÀ-ÿ0-9-]*")
+
 # Pure-alpha test: only stem tokens with no digits or hyphens
 _ALPHA_RE = re.compile(r"^[a-zA-ZÀ-ÿ]+$")
-
 
 # ---------------------------------------------------------------------------
 # Article dataclass
@@ -69,7 +67,6 @@ class Article:
     matched_topics: List[str] = field(default_factory=list)
     full_text: Optional[str] = None
 
-
 # ---------------------------------------------------------------------------
 # Stemming helpers
 # ---------------------------------------------------------------------------
@@ -84,14 +81,12 @@ def _stem_phrase(phrase: str, lang: str) -> list[str]:
         if _ALPHA_RE.match(tok):
             result.append(stemmer.stem(tok))
         else:
-            result.append(tok)  # preserve numbers, hyphenated tokens (C-48, co-pay)
+            result.append(tok)
     return result
-
 
 def _stem_text(text: str, lang: str) -> list[str]:
     """Tokenize and stem a full block of text."""
     return _stem_phrase(text, lang)
-
 
 def _text_contains_phrase(stemmed_text: list[str], stemmed_phrase: list[str]) -> bool:
     """Check if stemmed_phrase appears as a contiguous run in stemmed_text."""
@@ -103,25 +98,60 @@ def _text_contains_phrase(stemmed_text: list[str], stemmed_phrase: list[str]) ->
             return True
     return False
 
-
 # ---------------------------------------------------------------------------
-# Exclusion filter  ← this is what blocks police/crime/sports articles
+# Exclusion filter  ← blocks police/crime/sports articles
 # ---------------------------------------------------------------------------
 def _is_excluded(text: str, exclude_keywords: list) -> bool:
     """
     Return True if `text` contains any keyword from exclude_keywords.
-    Matching is word-boundary aware (won't match 'assault' inside 'assaulting' accidentally).
-    Case-insensitive.
+    Word-boundary aware. Case-insensitive.
     """
     text_lower = text.lower()
     for kw in exclude_keywords:
         kw_lower = kw.lower()
-        # \S boundary: keyword must not be preceded or followed by a non-space char
         pattern = r"(?<!\S)" + re.escape(kw_lower) + r"(?!\S)"
         if re.search(pattern, text_lower):
             return True
     return False
 
+# ---------------------------------------------------------------------------
+# Canada relevance filter  ← NEW: blocks articles with no Canadian angle
+# ---------------------------------------------------------------------------
+_CANADA_KEYWORDS = [
+    # Country
+    "canada", "canadian", "canadien", "canadienne",
+    # Federal institutions
+    "federal", "fédéral", "parliament", "parlement", "ottawa",
+    "bank of canada", "banque du canada", "cra", "rcmp", "grc",
+    "house of commons", "chambre des communes", "senate", "sénat",
+    "premier", "prime minister", "ministre",
+    # Provinces & territories
+    "ontario", "quebec", "québec", "british columbia",
+    "alberta", "manitoba", "saskatchewan",
+    "nova scotia", "nouvelle-écosse",
+    "new brunswick", "nouveau-brunswick",
+    "newfoundland", "labrador",
+    "prince edward island", "île-du-prince-édouard",
+    "northwest territories", "territoires du nord-ouest",
+    "nunavut", "yukon",
+    # Major cities
+    "toronto", "montreal", "montréal", "vancouver", "calgary",
+    "edmonton", "winnipeg", "halifax", "saskatoon", "regina",
+    "victoria", "gatineau", "longueuil", "surrey", "brampton",
+    "mississauga", "markham", "kitchener",
+    # Short forms used in Canadian press
+    " b.c.", " b.c ", " ont.", " ont ", " alta.", " alta ",
+    " sask.", " man.", " n.s.", " n.b.", " p.e.i.",
+]
+
+def _is_canada_relevant(text: str) -> bool:
+    """
+    Return True only if the article has a clear Canadian angle.
+    Every article in the brief must relate to Canada, its provinces,
+    or Canadian public policy — no pure international stories.
+    """
+    text_lower = text.lower()
+    return any(kw in text_lower for kw in _CANADA_KEYWORDS)
 
 # ---------------------------------------------------------------------------
 # Topic matching
@@ -135,24 +165,20 @@ def _matches_topic(stemmed_en: list[str], stemmed_fr: list[str], keywords: list)
                 return True
     return False
 
-
 # ---------------------------------------------------------------------------
 # Config loader (imported by main.py)
 # ---------------------------------------------------------------------------
 def load_config(config_path: str = "config.yml") -> dict:
-    # Resolve relative paths against the repo root (same directory as this file)
     path = Path(config_path)
     if not path.is_absolute():
         path = Path(__file__).parent / config_path
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
-
 # ---------------------------------------------------------------------------
 # Main fetch function
 # ---------------------------------------------------------------------------
 def fetch_all(config_path="config.yml") -> List[Article]:
-    # Accept either an already-loaded config dict or a file path string
     if isinstance(config_path, dict):
         config = config_path
     else:
@@ -188,7 +214,6 @@ def fetch_all(config_path="config.yml") -> List[Article]:
 
             try:
                 feed = feedparser.parse(feed_url, agent="Mozilla/5.0", request_headers={"Connection": "close"})
-                # feedparser doesn't natively timeout; skip feed if it returned no entries and no bozo
                 if not feed.entries and feed.get("bozo"):
                     log.warning("Bad feed for %s, skipping.", outlet_name)
                     continue
@@ -203,12 +228,11 @@ def fetch_all(config_path="config.yml") -> List[Article]:
 
                 art_id = hashlib.md5(url.encode()).hexdigest()
                 if art_id in seen_ids:
-                    continue  # already processed (duplicate URL across feeds)
+                    continue
 
                 title = entry.get("title", "").strip()
                 rss_summary = entry.get("summary", "").strip()
 
-                # Timestamp
                 published_struct = (
                     entry.get("published_parsed") or entry.get("updated_parsed")
                 )
@@ -222,17 +246,21 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 else:
                     published = datetime.now(timezone.utc).isoformat()
 
-                # Combined text used for both exclusion and topic matching
                 combined = f"{title} {rss_summary}"
 
                 # ── STEP 1: EXCLUSION FILTER ──────────────────────────────
-                # Runs BEFORE topic matching. If any exclude keyword matches,
-                # drop the article entirely — it never reaches Claude.
+                # Drop police/crime/sports articles before anything else.
                 if exclude_kws and _is_excluded(combined, exclude_kws):
                     log.debug("EXCLUDED (%s): %s", outlet_name, title)
                     continue
 
-                # ── STEP 2: TOPIC MATCHING ────────────────────────────────
+                # ── STEP 2: CANADA RELEVANCE FILTER ──────────────────────
+                # Drop any article with no clear Canadian angle.
+                if not _is_canada_relevant(combined):
+                    log.debug("NOT CANADA-RELEVANT (%s): %s", outlet_name, title)
+                    continue
+
+                # ── STEP 3: TOPIC MATCHING ────────────────────────────────
                 stemmed_en = _stem_text(combined, "english")
                 stemmed_fr = _stem_text(combined, "french")
 
@@ -243,9 +271,8 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                         matched_topics.append(topic_key)
 
                 if not matched_topics:
-                    continue  # doesn't match any monitored topic
+                    continue
 
-                # RSS summary is used directly — no full-text fetching.
                 seen_ids.add(art_id)
                 articles.append(
                     Article(
@@ -262,6 +289,6 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 )
 
     log.info(
-        "Fetched %d articles after exclusion + topic filtering.", len(articles)
+        "Fetched %d articles after exclusion + Canada filter + topic matching.", len(articles)
     )
     return articles
