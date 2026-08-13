@@ -229,7 +229,7 @@ def fetch_full_text(url: str, cookies_cfg: dict | None = None) -> Optional[str]:
             return None
 
         log.debug("Full text fetched: %d chars from %s", len(text), url)
-        return text[:5000]
+        return text[:8000]
 
     except Exception as exc:
         log.warning("Full-text fetch failed for %s: %s", url, exc)
