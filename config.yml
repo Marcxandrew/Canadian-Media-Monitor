@@ -21,11 +21,10 @@ email:
   smtp_host: "smtp.gmail.com"
   smtp_port: 587
   recipients:
-    - merian@iedm.org
+    - marcandrew.erian@gmail.com
     - rbrossard@iedm.org
     - nradenkovic@iedm.org
     - fplourde@iedm.org
-    - ggiguere@iedm.org
 
 exclude_keywords:
   - police
@@ -56,6 +55,19 @@ exclude_keywords:
   - "Memorial Cup"
   - roster
   - "player trade"
+  - "music video"
+  - "vidéoclip"
+  - "clip vidéo"
+  - scooter
+  - trottinette
+  - "accident de la route"
+  - "collision mortelle"
+  - tragédie
+  - olympique
+  - olympiques
+  - olympic
+  - olympics
+  - "jeux olympiques"
 
 outlets:
   anglophone_national:
@@ -167,7 +179,9 @@ topics:
       - EI
       - assurance-emploi
       - subsidy
+      - subsidies
       - subvention
+      - subventions
       - corporate welfare
       - crown corporation
       - société d'État
@@ -180,9 +194,12 @@ topics:
       - austerity
       - austérité
       - bureaucrat
+      - bureaucrats
       - bureaucratie
       - fonctionnaire
+      - fonctionnaires
       - public servant
+      - public servants
       - public service
       - fonction publique
       - government program
@@ -199,11 +216,14 @@ topics:
       - impôt des sociétés
       - childcare
       - garderie
+      - garderies
       - CPE
       - transfer payment
       - paiement de transfert
       - taxpayer
+      - taxpayers
       - contribuable
+      - contribuables
       - rebate
       - remboursement fiscal
       - surtax
@@ -212,6 +232,27 @@ topics:
       - recette fiscale
       - income splitting
       - fractionnement du revenu
+      - redevance
+      - redevances
+      - repayable loan
+      - repayable loans
+      - prêt remboursable
+      - prêts remboursables
+      - prêt pardonnable
+      - prêts pardonnables
+      - government investment
+      - government investments
+      - investissement gouvernemental
+      - investissements gouvernementaux
+      - Investissement Québec
+      - industrial strategy
+      - industrial strategies
+      - stratégie industrielle
+      - stratégies industrielles
+      - François-Philippe Champagne
+      - Eric Girard
+      - Bicha Ngo
+      - Bernard Drainville
 
   energy:
     label: "Energy"
@@ -242,12 +283,19 @@ topics:
       - oil sands
       - oilsands
       - sables bitumineux
+      - tar sands
       - Trans Mountain
       - TMX
       - refinery
       - raffinerie
       - fossil fuel
       - combustible fossile
+      - fossile
+      - fossiles
+      - pétro-gazier
+      - pétro-gazière
+      - pétro-gaziers
+      - pétro-gazières
       - emission
       - émission
       - decarbonization
@@ -277,6 +325,22 @@ topics:
       - plancher de carbone
       - energy regulator
       - CAPP
+      - Ksi Lisims
+      - Marinvest
+      - C-48
+      - C-69
+      - tanker ban
+      - ev mandate
+      - ev mandates
+      - electric vehicle mandate
+      - electric vehicle mandates
+      - mandat ZEV
+      - mandats ZEV
+      - véhicule électrique
+      - véhicules électriques
+      - VZE
+      - Alberta Energy Regulator
+      - Vista Coal
 
   housing:
     label: "Housing"
@@ -348,6 +412,8 @@ topics:
       - infirmier
       - doctor
       - médecin
+      - médecins
+      - docteur
       - physician
       - private healthcare
       - santé privée
@@ -380,6 +446,8 @@ topics:
       - CHSLD
       - family doctor
       - médecin de famille
+      - première ligne
+      - accès aux soins
       - MRI
       - health system
       - système de santé
@@ -389,6 +457,23 @@ topics:
       - surpopulation hospitalière
       - health reform
       - réforme de la santé
+      - activity-based funding
+      - patient-focused funding
+      - financement à l'activité
+      - financement axé sur le patient
+      - AHS
+      - Alberta Health Services
+      - Santé Québec
+      - pharmaceutical
+      - pharmaceuticals
+      - pharmaceutique
+      - pharmaceutiques
+      - biopharmaceutical
+      - biopharmaceuticals
+      - biopharmaceutique
+      - biopharmaceutiques
+      - Canadian Health Act
+      - Loi canadienne sur la santé
 
   ai_regulation:
     label: "AI & Regulation"
@@ -444,6 +529,10 @@ topics:
       - quantum
       - tech sector
       - secteur technologique
+      - MILA
+      - Evan Solomon
+      - innovation
+      - innovations
 
   affordability_cost_of_living:
     label: "Affordability & Cost of Living"
@@ -453,6 +542,7 @@ topics:
       - coût de la vie
       - grocery
       - épicerie
+      - épiceries
       - food price
       - prix alimentaire
       - affordability
@@ -518,17 +608,25 @@ topics:
       - CUSMA
       - USMCA
       - ACEUM
+      - ACÉUM
       - ALENA
       - NAFTA
       - tariff
+      - tariffs
       - tarif douanier
+      - tarifs douaniers
       - droit de douane
+      - droits de douane
+      - customs duties
       - trade war
       - guerre commerciale
       - trade deal
       - accord commercial
+      - accords commerciaux
       - trade agreement
       - accord de libre-échange
+      - free trade
+      - libre-échange
       - export
       - exportation
       - import
@@ -547,8 +645,8 @@ topics:
       - chaîne d'approvisionnement
       - trade barrier
       - barrière commerciale
-      - free trade
-      - libre-échange
+      - interprovincial trade
+      - commerce interprovincial
       - WTO
       - OMC
       - Trump
@@ -570,5 +668,3 @@ topics:
       - embargo
       - trade surplus
       - balance commerciale
-      - interprovincial trade
-      - commerce interprovincial
