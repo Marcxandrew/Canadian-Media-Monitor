@@ -4,8 +4,9 @@ Pipeline:
   1. Parse each outlet's RSS feed
   2. EXCLUDE articles matching exclude_keywords (police, sports, etc.)
   3. CANADA FILTER — drop articles with no Canadian angle
-  4. Match remaining articles against topic keywords (with stemming for singular/plural)
-  5. Return de-duplicated Article list
+  4. AGE FILTER — drop articles older than 24 hours
+  5. Match remaining articles against topic keywords (with stemming for singular/plural)
+  6. Return de-duplicated Article list
 """
 from __future__ import annotations
 import hashlib
@@ -14,7 +15,7 @@ import re
 import socket
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Optional
 import feedparser
@@ -105,7 +106,7 @@ def _is_excluded(text: str, exclude_keywords: list) -> bool:
             return True
     return False
 # ---------------------------------------------------------------------------
-# Canada relevance filter  ← NEW: blocks articles with no Canadian angle
+# Canada relevance filter  ← blocks articles with no Canadian angle
 # ---------------------------------------------------------------------------
 _CANADA_KEYWORDS = [
     # Country
@@ -179,6 +180,7 @@ def fetch_all(config_path="config.yml") -> List[Article]:
         "francophone": "Quebec",
         "alberta": "Alberta",
     }
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     seen_ids: set[str] = set()
     articles: List[Article] = []
     for region_key, outlet_list in outlets_cfg.items():
@@ -213,18 +215,23 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                     author = entry.author.strip()
                 elif entry.get("author_detail", {}).get("name"):
                     author = entry["author_detail"]["name"].strip()
+                # Parse published timestamp
                 published_struct = (
                     entry.get("published_parsed") or entry.get("updated_parsed")
                 )
                 if published_struct:
                     try:
-                        published = datetime(
-                            *published_struct[:6], tzinfo=timezone.utc
-                        ).isoformat()
+                        published_dt = datetime(*published_struct[:6], tzinfo=timezone.utc)
                     except Exception:
-                        published = datetime.now(timezone.utc).isoformat()
+                        published_dt = datetime.now(timezone.utc)
                 else:
-                    published = datetime.now(timezone.utc).isoformat()
+                    published_dt = datetime.now(timezone.utc)
+                # ── AGE FILTER ────────────────────────────────────────────
+                # Drop articles older than 24 hours.
+                if published_dt < cutoff:
+                    log.debug("TOO OLD (%s): %s", outlet_name, title)
+                    continue
+                published = published_dt.isoformat()
                 combined = f"{title} {rss_summary}"
                 # ── STEP 1: EXCLUSION FILTER ──────────────────────────────
                 # Drop police/crime/sports articles before anything else.
