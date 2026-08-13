@@ -253,6 +253,24 @@ topics:
       - Eric Girard
       - Bicha Ngo
       - Bernard Drainville
+      # Trusted columnists & reporters — top tier
+      - Matthew Lau
+      - William Watson
+      - Jack Mintz
+      - Terence Corcoran
+      - Kim Moody
+      - Trevor Tombe
+      - Charles Lammam
+      - Chris Varcoe
+      - Jordan Gowling
+      - Falice Chin
+      - Jay Goldberg
+      # Trusted columnists & reporters — second tier (most relevant)
+      - Sharon Kirkey
+      - Tasha Kheiriddin
+      - Emma Graney
+      - Rob Breakenridge
+      - Lorne Gunter
 
   energy:
     label: "Energy"
