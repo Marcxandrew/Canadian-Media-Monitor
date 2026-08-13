@@ -5,6 +5,11 @@ Supports:
   - Postmedia: National Post, Financial Post, Ottawa Citizen,
                 Calgary Herald, Edmonton Journal  (one shared login)
   - Globe and Mail
+  - Le Devoir
+  - Toronto Star
+  - Les Affaires
+  - L'actualité
+  - iPolitics
 
 Cookies are stored in cookies.json next to this file.
 See COOKIE_SETUP.md for how to extract them from your browser.
@@ -20,7 +25,7 @@ import logging
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional
+from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -29,12 +34,19 @@ log = logging.getLogger(__name__)
 
 _COOKIES_PATH = os.path.join(os.path.dirname(__file__), "cookies.json")
 
-_POSTMEDIA_DOMAINS = {
-    "nationalpost.com",
-    "financialpost.com",
-    "ottawacitizen.com",
-    "calgaryherald.com",
-    "edmontonjournal.com",
+# Maps URL substring → cookies.json key
+_DOMAIN_TO_KEY = {
+    "nationalpost.com":   "postmedia",
+    "financialpost.com":  "postmedia",
+    "ottawacitizen.com":  "postmedia",
+    "calgaryherald.com":  "postmedia",
+    "edmontonjournal.com":"postmedia",
+    "theglobeandmail.com":"globe",
+    "ledevoir.com":       "ledevoir",
+    "thestar.com":        "thestar",
+    "lesaffaires.com":    "lesaffaires",
+    "lactualite.com":     "lactualite",
+    "ipolitics.ca":       "ipolitics",
 }
 
 _HEADERS = {
@@ -66,11 +78,9 @@ def _load_cookies() -> dict:
 
 
 def _cookie_key(url: str) -> Optional[str]:
-    for domain in _POSTMEDIA_DOMAINS:
+    for domain, key in _DOMAIN_TO_KEY.items():
         if domain in url:
-            return "postmedia"
-    if "theglobeandmail.com" in url:
-        return "globe"
+            return key
     return None
 
 
@@ -87,6 +97,9 @@ _PAYWALL_PHRASES = [
     "this article is for subscribers",
     "already a subscriber",
     "unlimited articles",
+    "abonnez-vous",
+    "réservé aux abonnés",
+    "accès réservé",
 ]
 
 def _is_paywalled(text: str) -> bool:
@@ -98,26 +111,59 @@ def _is_paywalled(text: str) -> bool:
 # HTML → plain text extraction
 # ---------------------------------------------------------------------------
 
-# Selectors tried in order; first match wins
-_POSTMEDIA_SELECTORS = [
-    "div.article-content__content-group",
-    "div[class*='article-content']",
-    "div[class*='articleBody']",
-    "div[itemprop='articleBody']",
-    "div.story-text",
-    "article",
-]
+# Per-outlet selectors, tried in order; first match with >300 chars wins
+_SELECTORS = {
+    "postmedia": [
+        "div.article-content__content-group",
+        "div[class*='article-content']",
+        "div[class*='articleBody']",
+        "div[itemprop='articleBody']",
+        "div.story-text",
+        "article",
+    ],
+    "globe": [
+        "div.c-article-body",
+        "div[class*='article__body']",
+        "div[class*='articleBody']",
+        "div[itemprop='articleBody']",
+        "article",
+    ],
+    "ledevoir": [
+        "div.article-body",
+        "div[class*='article-body']",
+        "div[itemprop='articleBody']",
+        "div.field--type-text-long",
+        "article",
+    ],
+    "thestar": [
+        "div.article-body__content",
+        "div[class*='article-body']",
+        "div[itemprop='articleBody']",
+        "article",
+    ],
+    "lesaffaires": [
+        "div.article-body",
+        "div[class*='article-body']",
+        "div[class*='entry-content']",
+        "article",
+    ],
+    "lactualite": [
+        "div.entry-content",
+        "div[class*='article-body']",
+        "div[class*='entry-content']",
+        "article",
+    ],
+    "ipolitics": [
+        "div.entry-content",
+        "div[class*='article-content']",
+        "div[class*='post-content']",
+        "article",
+    ],
+}
+_DEFAULT_SELECTORS = ["div[itemprop='articleBody']", "article", "main"]
 
-_GLOBE_SELECTORS = [
-    "div.c-article-body",
-    "div[class*='article__body']",
-    "div[class*='articleBody']",
-    "div[itemprop='articleBody']",
-    "article",
-]
 
-
-def _extract_text(html: str, url: str) -> str:
+def _extract_text(html: str, key: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
 
     # Strip noise
@@ -125,7 +171,7 @@ def _extract_text(html: str, url: str) -> str:
                                "aside", "figure", "figcaption", "noscript"]):
         tag.decompose()
 
-    selectors = _GLOBE_SELECTORS if "theglobeandmail.com" in url else _POSTMEDIA_SELECTORS
+    selectors = _SELECTORS.get(key, _DEFAULT_SELECTORS)
 
     for selector in selectors:
         elem = soup.select_one(selector)
@@ -172,7 +218,7 @@ def fetch_full_text(url: str, cookies_cfg: dict | None = None) -> Optional[str]:
             log.debug("HTTP %d for %s", resp.status_code, url)
             return None
 
-        text = _extract_text(resp.text, url)
+        text = _extract_text(resp.text, key)
 
         if len(text) < 200:
             log.debug("Text too short (%d chars) — likely still paywalled: %s", len(text), url)
@@ -183,7 +229,7 @@ def fetch_full_text(url: str, cookies_cfg: dict | None = None) -> Optional[str]:
             return None
 
         log.debug("Full text fetched: %d chars from %s", len(text), url)
-        return text[:5000]   # cap to avoid bloating Claude prompt
+        return text[:5000]
 
     except Exception as exc:
         log.warning("Full-text fetch failed for %s: %s", url, exc)
@@ -196,7 +242,7 @@ def fetch_full_text(url: str, cookies_cfg: dict | None = None) -> Optional[str]:
 
 def enrich_with_full_text(articles, max_workers: int = 5) -> None:
     """
-    Fetch full article text for Postmedia and Globe articles in parallel.
+    Fetch full article text for all supported paywalled outlets in parallel.
     Sets article.full_text in-place. Skips articles already enriched.
     Called after fetch_all() completes, before synthesize().
     """
