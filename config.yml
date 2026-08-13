@@ -21,7 +21,7 @@ email:
   smtp_host: "smtp.gmail.com"
   smtp_port: 587
   recipients:
-    - marcandrew.erian@gmail.com
+    - merian@iedm.org
     - rbrossard@iedm.org
     - nradenkovic@iedm.org
     - fplourde@iedm.org
