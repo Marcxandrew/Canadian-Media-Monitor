@@ -1,15 +1,12 @@
-"""SMTP delivery of the morning brief."""
+"""Email delivery of the morning brief via SendGrid."""
 from __future__ import annotations
-
 import logging
 import os
-import smtplib
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 log = logging.getLogger(__name__)
-
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -51,20 +48,22 @@ def send_brief(html_body: str, config: dict, n_articles: int, n_outlets: int) ->
         body=html_body,
     )
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = cfg["subject_template"].format(
-        date=datetime.now().strftime("%b %d")
-    )
-    msg["From"] = cfg["from_address"]
-    msg["To"] = ", ".join(cfg["recipients"])
-    msg.attach(MIMEText(full_html, "html", "utf-8"))
+    subject = cfg["subject_template"].format(date=datetime.now().strftime("%b %d"))
+    from_address = cfg["from_address"]
+    recipients = cfg["recipients"]
 
-    smtp_user = os.environ["SMTP_USER"]
-    smtp_pass = os.environ["SMTP_PASSWORD"]
+    api_key = os.environ["SENDGRID_API_KEY"]
+    sg = SendGridAPIClient(api_key=api_key)
 
-    log.info("Sending to %d recipient(s) via %s", len(cfg["recipients"]), cfg["smtp_host"])
-    with smtplib.SMTP(cfg["smtp_host"], cfg["smtp_port"]) as server:
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.send_message(msg)
+    log.info("Sending to %d recipient(s) via SendGrid", len(recipients))
+
+    for recipient in recipients:
+        message = Mail(
+            from_email=from_address,
+            to_emails=recipient,
+            subject=subject,
+            html_content=full_html,
+        )
+        sg.send(message)
+
     log.info("Sent.")
