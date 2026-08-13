@@ -62,9 +62,66 @@ RULES FOR ASSEMBLY:
 - Capitalize region as "Quebec", "Alberta", or "National".
 - EVERY article with a URL must appear in the output. Zero omissions.
 - Output nothing else - no intro paragraph, no closing note, no list of sources at the end."""
+
+
+# ---------------------------------------------------------------------------
+# MEI/IEDM media mentions section  ← built in Python, no Claude tokens used
+# ---------------------------------------------------------------------------
+def _build_mei_section(mei_articles: List[Article], ytd_count: int) -> str:
+    """
+    Render the MEI/IEDM media mentions section as HTML.
+    Appended after the Claude brief; no additional Claude call needed.
+    """
+    import pytz
+    EASTERN = pytz.timezone("America/Toronto")
+
+    lines = [
+        '<h2 style="color:#1a1a2e;border-bottom:2px solid #e0e0e0;padding-bottom:6px;'
+        'margin-top:36px;">MEI / IEDM — Mentions médias du jour</h2>',
+    ]
+
+    if mei_articles:
+        for a in mei_articles:
+            try:
+                pub_dt = datetime.fromisoformat(a.published).astimezone(EASTERN)
+                time_str = pub_dt.strftime("%-I:%M %p ET").lower().replace("am", "AM").replace("pm", "PM")
+            except Exception:
+                time_str = ""
+            byline = f" · By {a.author}" if a.author else ""
+            meta = f"{a.outlet}{byline}{' · ' + time_str if time_str else ''} · {a.region}".strip(" ·")
+            lines.append(
+                f'<div style="margin-bottom:14px;">'
+                f'<p style="margin:0 0 3px 0;">'
+                f'<a href="{a.url}" style="color:#0a58ca;text-decoration:none;font-weight:600;">'
+                f'{a.title}</a></p>'
+                f'<p style="margin:0;color:#888;font-size:12px;">{meta}</p>'
+                f'</div>'
+            )
+    else:
+        lines.append(
+            '<p style="color:#888;font-size:13px;font-style:italic;">'
+            'Aucune mention trouvée dans les fils RSS des dernières 24 heures.</p>'
+        )
+
+    lines.append(
+        f'<p style="margin-top:16px;font-size:13px;border-top:1px solid #eee;'
+        f'padding-top:10px;color:#555;">'
+        f'<strong>Mentions MEI/IEDM cumulées en {datetime.now().year} : {ytd_count}</strong></p>'
+    )
+
+    return "\n".join(lines)
+
+
 def synthesize(articles: List[Article], model: str, max_tokens: int = 8000,
-               topic_labels: dict | None = None) -> str:
-    """Call Claude with the article batch, return the HTML clipping brief."""
+               topic_labels: dict | None = None,
+               mei_articles: List[Article] | None = None,
+               mei_ytd_count: int = 0) -> str:
+    """Call Claude with the article batch, return the HTML clipping brief.
+
+    If mei_articles is provided, a MEI/IEDM media mentions section is
+    appended after the Claude-generated content (built directly in Python,
+    no additional API call).
+    """
     client = Anthropic()
     payload = []
     for a in articles:
@@ -101,4 +158,9 @@ def synthesize(articles: List[Article], model: str, max_tokens: int = 8000,
         if brief.startswith("html"):
             brief = brief[4:]
         brief = brief.rsplit("```", 1)[0].strip()
+
+    # Append MEI section if caller passed MEI data
+    if mei_articles is not None:
+        brief += "\n\n" + _build_mei_section(mei_articles, mei_ytd_count)
+
     return brief
