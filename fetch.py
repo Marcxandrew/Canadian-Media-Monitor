@@ -444,3 +444,102 @@ def fetch_all(config_path="config.yml") -> List[Article]:
         "Fetched %d articles after exclusion + Canada filter + economics filter + topic matching.", len(articles)
     )
     return articles
+# ---------------------------------------------------------------------------
+# MEI/IEDM mention scanner  ← separate pass, bypasses all content filters
+# ---------------------------------------------------------------------------
+# Case-sensitive acronym patterns + case-insensitive full names
+_MEI_PATTERNS = [
+    re.compile(r"\bMEI\b"),
+    re.compile(r"\bIEDM\b"),
+    re.compile(r"Montreal Economic Institute", re.IGNORECASE),
+    re.compile(r"Institut\s+économique\s+de\s+Montréal", re.IGNORECASE),
+    re.compile(r"Institut\s+economique\s+de\s+Montreal", re.IGNORECASE),
+]
+
+def _mentions_mei(text: str) -> bool:
+    """Return True if any MEI/IEDM pattern appears in the text."""
+    return any(p.search(text) for p in _MEI_PATTERNS)
+
+
+def fetch_mei_mentions(config_path="config.yml") -> List[Article]:
+    """
+    Scan all configured RSS feeds for articles that mention MEI or IEDM.
+    Only the 24-hour age filter is applied — no exclusion, Canada, economics,
+    or topic filters. Returns de-duplicated list sorted newest-first.
+    """
+    if isinstance(config_path, dict):
+        config = config_path
+    else:
+        config = load_config(config_path)
+    outlets_cfg = config.get("outlets", {})
+    region_map = {
+        "anglophone_national": "National",
+        "francophone": "Quebec",
+        "alberta": "Alberta",
+    }
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    seen_ids: set[str] = set()
+    mei_articles: List[Article] = []
+    for region_key, outlet_list in outlets_cfg.items():
+        region_label = region_map.get(region_key, region_key.replace("_", " ").title())
+        for outlet_cfg in outlet_list:
+            outlet_name = outlet_cfg.get("name", "Unknown")
+            feed_url = outlet_cfg.get("feed", "")
+            lang = outlet_cfg.get("language", "english")
+            if not feed_url:
+                continue
+            try:
+                feed = feedparser.parse(feed_url, agent="Mozilla/5.0", request_headers={"Connection": "close"})
+                if not feed.entries and feed.get("bozo"):
+                    continue
+            except Exception as exc:
+                log.warning("MEI scan — failed to parse feed for %s: %s", outlet_name, exc)
+                continue
+            for entry in feed.entries:
+                url = entry.get("link", "").strip()
+                if not url:
+                    continue
+                art_id = hashlib.md5(url.encode()).hexdigest()
+                if art_id in seen_ids:
+                    continue
+                title = entry.get("title", "").strip()
+                rss_summary = entry.get("summary", "").strip()
+                author = ""
+                if hasattr(entry, "author") and entry.author:
+                    author = entry.author.strip()
+                elif entry.get("author_detail", {}).get("name"):
+                    author = entry["author_detail"]["name"].strip()
+                published_struct = (
+                    entry.get("published_parsed") or entry.get("updated_parsed")
+                )
+                if published_struct:
+                    try:
+                        published_dt = datetime(*published_struct[:6], tzinfo=timezone.utc)
+                    except Exception:
+                        published_dt = datetime.now(timezone.utc)
+                else:
+                    published_dt = datetime.now(timezone.utc)
+                # Age filter only
+                if published_dt < cutoff:
+                    continue
+                combined = f"{title} {rss_summary}"
+                if not _mentions_mei(combined):
+                    continue
+                seen_ids.add(art_id)
+                mei_articles.append(
+                    Article(
+                        title=title,
+                        url=url,
+                        outlet=outlet_name,
+                        region=region_label,
+                        language=lang,
+                        published=published_dt.isoformat(),
+                        summary=rss_summary[:800],
+                        author=author,
+                        matched_topics=["mei_mention"],
+                        full_text=None,
+                    )
+                )
+    mei_articles.sort(key=lambda a: a.published, reverse=True)
+    log.info("MEI scan: found %d mention(s) in last 24 hours.", len(mei_articles))
+    return mei_articles
