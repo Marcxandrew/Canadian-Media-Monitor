@@ -2,10 +2,11 @@
 from __future__ import annotations
 import logging
 import sys
-from fetch import fetch_all, fetch_mei_mentions, load_config
+from fetch import fetch_all, fetch_mei_mentions, load_config, _mentions_mei
 from synthesize import synthesize
 from email_sender import send_brief
 from mentions_tracker import update_tracker
+from article_fetcher import enrich_with_full_text
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,9 +53,26 @@ def main() -> int:
         for key, cfg in config["topics"].items()
     }
 
+    # ── Full-text enrichment (Postmedia + Globe) ──────────────────────────
+    # Fetches full article body using session cookies, replacing the RSS
+    # snippet sent to Claude. Also used for MEI mention detection below.
+    enrich_with_full_text(articles)
+
     # ── MEI / IEDM media mentions ─────────────────────────────────────────
-    mei_articles = fetch_mei_mentions(config)
-    ytd_count = update_tracker(len(mei_articles))
+    # Source 1: broad RSS scan of all feeds
+    mei_rss = fetch_mei_mentions(config)
+
+    # Source 2: full-text scan of main pipeline articles (catches paywall citations)
+    mei_fulltext = [
+        a for a in articles
+        if a.full_text and _mentions_mei(a.full_text)
+        and a.url not in {m.url for m in mei_rss}   # deduplicate
+    ]
+    if mei_fulltext:
+        log.info("MEI full-text scan: %d additional mention(s) found.", len(mei_fulltext))
+
+    all_mei = mei_rss + mei_fulltext
+    ytd_count = update_tracker(len(all_mei))
 
     # ── Synthesize (Claude) + append MEI section ──────────────────────────
     brief_html = synthesize(
@@ -62,7 +80,7 @@ def main() -> int:
         model=config["claude"]["model"],
         max_tokens=config["claude"]["max_output_tokens"],
         topic_labels=topic_labels,
-        mei_articles=mei_articles,
+        mei_articles=all_mei,
         mei_ytd_count=ytd_count,
     )
 
