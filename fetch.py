@@ -143,6 +143,131 @@ def _is_canada_relevant(text: str) -> bool:
     text_lower = text.lower()
     return any(kw in text_lower for kw in _CANADA_KEYWORDS)
 # ---------------------------------------------------------------------------
+# Economics & policy relevance filter  ← checks TITLE ONLY
+# ---------------------------------------------------------------------------
+_ECONOMICS_KEYWORDS = [
+    # Core macroeconomics
+    "economy", "economic", "économie", "économique",
+    "gdp", "pib", "growth", "croissance", "recession", "récession",
+    "fiscal", "budget", "deficit", "déficit", "surplus",
+    "debt", "dette", "spending", "dépense",
+    "inflation", "interest rate", "taux d'intérêt",
+    # Tax & revenue
+    "tax", "impôt", "taxe", "taxation",
+    "tariff", "tarif", "droits de douane",
+    "surtax", "surtaxe",
+    "revenue", "recette",
+    "rebate", "remboursement",
+    "gas tax", "taxe sur l'essence",
+    "income splitting", "fractionnement du revenu",
+    "impôt des sociétés", "corporate tax",
+    # Public spending & bureaucracy
+    "spending", "dépense",
+    "subsidy", "subvention",
+    "allowance",
+    "bureaucrat", "bureaucratie",
+    "fonctionnaire", "public servant",
+    "contribuable", "taxpayer",
+    "sovereign wealth fund", "fonds souverain", "canada strong fund",
+    "equalization", "péréquation",
+    "crown corporation", "société d'état",
+    # Regulation & red tape
+    "regulation", "réglementation",
+    "red tape", "paperasse",
+    "fardeau réglementaire",
+    "deregulation", "déréglementation",
+    "normes",
+    "permitting",
+    "privatization", "privatisation",
+    "lobbying",
+    # Markets & finance
+    "market", "marché",
+    "investment", "investissement",
+    "venture capital",
+    "capital requirements",
+    "osfi",
+    "bond", "obligation",
+    "business", "entreprise",
+    "industry", "industrie", "secteur",
+    "bank", "banque",
+    "competitiveness", "compétitivité",
+    "productivity", "productivité",
+    # Trade
+    "trade", "commerce",
+    "export", "exportation", "import", "importation",
+    "cusma", "aceum", "usmca", "alena", "nafta",
+    "steel", "acier",
+    "aluminum", "aluminium",
+    "supply chain", "chaîne d'approvisionnement",
+    "supply management", "gestion de l'offre",
+    "quota",
+    "accord commercial",
+    "interprovincial",
+    "softwood", "bois d'oeuvre",
+    # Labour & employment
+    "employment", "emploi", "unemployment", "chômage",
+    "wage", "salaire",
+    "strike", "grève",
+    "skilled trades", "métiers",
+    "labour", "travail",
+    # Cost of living & affordability
+    "inflation",
+    "price", "prix",
+    "cost", "coût",
+    "affordab",
+    "grocery", "épicerie",
+    "essence", "gasoline",
+    "heating", "chauffage",
+    "purchasing power", "pouvoir d'achat",
+    # Housing
+    "housing", "logement",
+    "loyer", "rent",
+    "mortgage", "hypothèque",
+    "homelessness", "itinérance",
+    "construction cost", "coût de construction",
+    "zoning", "zonage",
+    "hst rebate",
+    # Energy
+    "energy", "énergie",
+    "pipeline", "oléoduc",
+    "carbon", "carbone",
+    "oil", "pétrole",
+    "natural gas", "gaz naturel",
+    "nuclear", "nucléaire",
+    "lng", "gnl",
+    "oil sands", "sables bitumineux",
+    "coal", "charbon",
+    "churchill falls",
+    "hydro-québec",
+    "électricité", "electricity",
+    "véhicule électrique", "electric vehicle",
+    "carbon storage",
+    # Healthcare & social policy
+    "healthcare", "santé",
+    "hospital", "hôpital",
+    "cancer",
+    "mri",
+    "wait time", "délai d'attente", "liste d'attente",
+    "pharmacare",
+    "childcare", "garderie", "cpe", "day care", "day-care",
+    "pension", "retraite",
+    "assurance",
+    # Numbers & scale (signal of policy/economics story)
+    "billion", "billion",
+    "milliard",
+    "million",
+    "percent", "pourcentage",
+]
+
+def _is_economics_relevant(title: str) -> bool:
+    """
+    Return True only if the article HEADLINE contains a clear economics
+    or public policy term. Checks title only — if the economic angle
+    is not in the headline, the article is not primarily about economics.
+    """
+    title_lower = title.lower()
+    return any(kw in title_lower for kw in _ECONOMICS_KEYWORDS)
+# ---------------------------------------------------------------------------
 # Topic matching
 # ---------------------------------------------------------------------------
 def _matches_topic(stemmed_en: list[str], stemmed_fr: list[str], keywords: list) -> bool:
@@ -243,7 +368,14 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                 if not _is_canada_relevant(combined):
                     log.debug("NOT CANADA-RELEVANT (%s): %s", outlet_name, title)
                     continue
-                # ── STEP 3: TOPIC MATCHING ────────────────────────────────
+                # ── STEP 3: ECONOMICS RELEVANCE FILTER ───────────────────
+                # Drop articles whose headline has no clear economics or
+                # public policy term — filters out celebrity, crime, human
+                # interest, and other off-topic content.
+                if not _is_economics_relevant(title):
+                    log.debug("NOT ECONOMICS-RELEVANT (%s): %s", outlet_name, title)
+                    continue
+                # ── STEP 4: TOPIC MATCHING ────────────────────────────────
                 stemmed_en = _stem_text(combined, "english")
                 stemmed_fr = _stem_text(combined, "french")
                 matched_topics = []
@@ -269,6 +401,6 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                     )
                 )
     log.info(
-        "Fetched %d articles after exclusion + Canada filter + topic matching.", len(articles)
+        "Fetched %d articles after exclusion + Canada filter + economics filter + topic matching.", len(articles)
     )
     return articles
