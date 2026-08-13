@@ -2,23 +2,19 @@
 # Canadian Media Monitor — Configuration
 # ============================================================
 
-# ── Claude settings ─────────────────────────────────────────
 claude:
   model: claude-sonnet-4-6
   max_output_tokens: 8000
   max_articles_per_call: 40
 
-# ── Filter settings ─────────────────────────────────────────
 filter:
-  min_relevant_articles: 3   # skip email if fewer than this many articles matched
+  min_relevant_articles: 3
 
-# ── Priority regions (kept first if article cap is hit) ─────
 priority_regions:
   - Quebec
   - National
   - Alberta
 
-# ── Email delivery ──────────────────────────────────────────
 email:
   subject_template: "Morning Media Brief — {date}"
   from_address: "iedm.mediabrief@gmail.com"
@@ -29,11 +25,8 @@ email:
     - rbrossard@iedm.org
     - nradenkovic@iedm.org
     - fplourde@iedm.org
-# ── Exclusion keywords ──────────────────────────────────────
-# Articles whose title OR RSS summary contains any of these
-# are dropped before topic matching — they never reach Claude.
+
 exclude_keywords:
-  # Crime & police
   - police
   - shooting
   - homicide
@@ -50,7 +43,6 @@ exclude_keywords:
   - "faits divers"
   - "coups de feu"
   - agression
-  # Sports
   - NHL
   - LNH
   - NBA
@@ -64,9 +56,7 @@ exclude_keywords:
   - roster
   - "player trade"
 
-# ── News outlets ────────────────────────────────────────────
 outlets:
-
   anglophone_national:
     - name: "Globe and Mail"
       feed: "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/politics/"
@@ -95,7 +85,15 @@ outlets:
     - name: "iPolitics"
       feed: "https://ipolitics.ca/feed/"
       language: english
-
+    - name: "Ottawa Citizen"
+      feed: "https://ottawacitizen.com/feed"
+      language: english
+    - name: "Global News"
+      feed: "https://globalnews.ca/feed/"
+      language: english
+    - name: "Maclean's"
+      feed: "https://macleans.ca/feed/"
+      language: english
   francophone:
     - name: "La Presse"
       feed: "https://www.lapresse.ca/actualites/rss"
@@ -121,7 +119,15 @@ outlets:
     - name: "Le Soleil"
       feed: "https://www.lesoleil.com/rss"
       language: french
-
+    - name: "TVA Nouvelles"
+      feed: "https://www.tvanouvelles.ca/rss"
+      language: french
+    - name: "Le Quotidien"
+      feed: "https://www.lequotidien.com/rss/"
+      language: french
+    - name: "L'actualité"
+      feed: "https://lactualite.com/feed/"
+      language: french
   alberta:
     - name: "Calgary Herald"
       feed: "https://calgaryherald.com/feed"
@@ -136,11 +142,7 @@ outlets:
       feed: "https://www.westernstandard.news/feed/"
       language: english
 
-# ── Topics & keywords ────────────────────────────────────────
-# Each topic needs a "label" (shown as the email section header)
-# and a "keywords" list. Stemming handles singular/plural automatically.
 topics:
-
   public_spending:
     label: "Public Spending & Taxation"
     keywords:
@@ -165,24 +167,50 @@ topics:
       - assurance-emploi
       - subsidy
       - subvention
+      - corporate welfare
       - crown corporation
       - société d'État
       - privatization
       - privatisation
-      - deregulation
-      - déréglementation
-      - regulation
-      - réglementation
-      - public sector
-      - secteur public
-      - transfer payment
-      - paiement de transfert
       - equalization
       - péréquation
       - spending cut
       - coupes budgétaires
       - austerity
       - austérité
+      - bureaucrat
+      - bureaucratie
+      - fonctionnaire
+      - public servant
+      - public service
+      - fonction publique
+      - government program
+      - programme gouvernemental
+      - sovereign wealth fund
+      - fonds souverain
+      - Canada Strong Fund
+      - Taxpayers Federation
+      - fédération des contribuables
+      - gas tax
+      - taxe sur l'essence
+      - income tax
+      - corporate tax
+      - impôt des sociétés
+      - childcare
+      - garderie
+      - CPE
+      - transfer payment
+      - paiement de transfert
+      - taxpayer
+      - contribuable
+      - rebate
+      - remboursement fiscal
+      - surtax
+      - surtaxe
+      - revenue
+      - recette fiscale
+      - income splitting
+      - fractionnement du revenu
 
   energy:
     label: "Energy"
@@ -192,6 +220,7 @@ topics:
       - natural gas
       - gaz naturel
       - pipeline
+      - oléoduc
       - LNG
       - GNL
       - carbon tax
@@ -231,6 +260,22 @@ topics:
       - solar power
       - éolien
       - solaire
+      - coal
+      - charbon
+      - gas prices
+      - prix de l'essence
+      - essence
+      - fuel
+      - carburant
+      - power grid
+      - réseau électrique
+      - panne de courant
+      - Churchill Falls
+      - industrial carbon
+      - carbon floor
+      - plancher de carbone
+      - energy regulator
+      - CAPP
 
   housing:
     label: "Housing"
@@ -269,6 +314,16 @@ topics:
       - densification
       - housing supply
       - offre de logement
+      - homelessness
+      - itinérance
+      - short-term rental
+      - location de courte durée
+      - Airbnb
+      - HST rebate
+      - new home sales
+      - housing market
+      - marché immobilier
+      - construction résidentielle
 
   healthcare:
     label: "Healthcare"
@@ -279,6 +334,7 @@ topics:
       - hôpital
       - wait time
       - délai d'attente
+      - liste d'attente
       - surgery
       - chirurgie
       - pharmacare
@@ -313,6 +369,25 @@ topics:
       - OHIP
       - clinic
       - clinique
+      - cancer
+      - traitement contre le cancer
+      - cross-border care
+      - soins transfrontaliers
+      - senior care
+      - résidence pour aînés
+      - aîné
+      - CHSLD
+      - family doctor
+      - médecin de famille
+      - MRI
+      - health system
+      - système de santé
+      - private clinic
+      - clinique privée
+      - hospital overcrowding
+      - surpopulation hospitalière
+      - health reform
+      - réforme de la santé
 
   ai_regulation:
     label: "AI & Regulation"
@@ -340,20 +415,34 @@ topics:
       - big tech
       - platform regulation
       - réglementation des plateformes
-      - AI strategy
-      - stratégie IA
       - generative AI
       - IA générative
       - copyright
       - droit d'auteur
       - C-18
       - online news
-      - nouvelles en ligne
       - streaming
       - Netflix tax
       - taxe Netflix
-      - dynamic pricing
-      - prix dynamique
+      - red tape
+      - paperasse
+      - fardeau réglementaire
+      - regulatory burden
+      - overregulation
+      - suréglementation
+      - deregulation
+      - déréglementation
+      - regulatory reform
+      - réforme réglementaire
+      - regulatory framework
+      - cadre réglementaire
+      - business regulation
+      - réglementation des entreprises
+      - permitting
+      - AI readiness
+      - quantum
+      - tech sector
+      - secteur technologique
 
   affordability_cost_of_living:
     label: "Affordability & Cost of Living"
@@ -392,16 +481,47 @@ topics:
       - pouvoir d'achat
       - debt load
       - endettement
+      - gasoline
+      - essence
+      - prix de l'essence
+      - grocery store
+      - supermarché
+      - food bank
+      - banque alimentaire
+      - household debt
+      - dette des ménages
+      - heating
+      - chauffage
+      - hydro bill
+      - facture d'électricité
+      - wage
+      - salaire
+      - employment
+      - emploi
+      - unemployment
+      - chômage
+      - labour market
+      - marché du travail
+      - strike
+      - grève
+      - income
+      - revenu des ménages
+      - venture capital
+      - investissement
+      - job creation
+      - création d'emplois
 
   trade:
     label: "Trade"
     keywords:
       - CUSMA
       - USMCA
+      - ACEUM
       - ALENA
       - NAFTA
       - tariff
       - tarif douanier
+      - droit de douane
       - trade war
       - guerre commerciale
       - trade deal
@@ -432,3 +552,22 @@ topics:
       - OMC
       - Trump
       - sanction
+      - steel
+      - acier
+      - aluminum
+      - aluminium
+      - auto tariff
+      - tarif automobile
+      - trade negotiation
+      - négociation commerciale
+      - LeBlanc
+      - trade partner
+      - partenaire commercial
+      - retaliatory tariff
+      - tarif de représailles
+      - surtaxe
+      - embargo
+      - trade surplus
+      - balance commerciale
+      - interprovincial trade
+      - commerce interprovincial
