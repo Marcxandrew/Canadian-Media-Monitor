@@ -5,8 +5,10 @@ Pipeline:
   2. EXCLUDE articles matching exclude_keywords (police, sports, etc.)
   3. CANADA FILTER — drop articles with no Canadian angle
   4. AGE FILTER — drop articles older than 24 hours
-  5. Match remaining articles against topic keywords (with stemming for singular/plural)
-  6. Return de-duplicated Article list
+  5. ECONOMICS FILTER — drop articles whose headline has no economics/policy term
+     (bypassed for trusted authors — their byline is the relevance signal)
+  6. Match remaining articles against topic keywords (with stemming for singular/plural)
+  7. Return de-duplicated Article list
 """
 from __future__ import annotations
 import hashlib
@@ -143,6 +145,37 @@ def _is_canada_relevant(text: str) -> bool:
     text_lower = text.lower()
     return any(kw in text_lower for kw in _CANADA_KEYWORDS)
 # ---------------------------------------------------------------------------
+# Trusted author bypass — skip economics title filter for known columnists
+# ---------------------------------------------------------------------------
+_TRUSTED_AUTHORS = {
+    # Top tier — consistently on-topic
+    "matthew lau",
+    "william watson",
+    "jack mintz",
+    "terence corcoran",
+    "kim moody",
+    "trevor tombe",
+    "charles lammam",
+    "chris varcoe",
+    "jordan gowling",
+    "falice chin",
+    "jay goldberg",
+    # Second tier — most relevant picks
+    "sharon kirkey",
+    "tasha kheiriddin",
+    "emma graney",
+    "rob breakenridge",
+    "lorne gunter",
+}
+
+def _is_trusted_author(author: str) -> bool:
+    """
+    Return True if the article's author field matches a known trusted byline.
+    Uses substring matching so "William Watson, Financial Post" still fires.
+    """
+    author_lower = author.lower()
+    return any(name in author_lower for name in _TRUSTED_AUTHORS)
+# ---------------------------------------------------------------------------
 # Economics & policy relevance filter  ← checks TITLE ONLY
 # ---------------------------------------------------------------------------
 _ECONOMICS_KEYWORDS = [
@@ -260,7 +293,7 @@ _ECONOMICS_KEYWORDS = [
     "clinique",
     "rendez-vous médical",
     # Numbers & scale (signal of policy/economics story)
-    "billion", "billion",
+    "billion",
     "milliard",
     "million",
     "percent", "pourcentage",
@@ -376,10 +409,10 @@ def fetch_all(config_path="config.yml") -> List[Article]:
                     log.debug("NOT CANADA-RELEVANT (%s): %s", outlet_name, title)
                     continue
                 # ── STEP 3: ECONOMICS RELEVANCE FILTER ───────────────────
-                # Drop articles whose headline has no clear economics or
-                # public policy term — filters out celebrity, crime, human
-                # interest, and other off-topic content.
-                if not _is_economics_relevant(title):
+                # Trusted authors bypass this check — their byline is the
+                # relevance signal. Everyone else must have an economics term
+                # in the headline to pass.
+                if not _is_trusted_author(author) and not _is_economics_relevant(title):
                     log.debug("NOT ECONOMICS-RELEVANT (%s): %s", outlet_name, title)
                     continue
                 # ── STEP 4: TOPIC MATCHING ────────────────────────────────
