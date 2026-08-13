@@ -252,6 +252,13 @@ _ECONOMICS_KEYWORDS = [
     "childcare", "garderie", "cpe", "day care", "day-care",
     "pension", "retraite",
     "assurance",
+    # Healthcare access
+    "médecin", "médecins",
+    "docteur",
+    "première ligne",
+    "accès aux soins",
+    "clinique",
+    "rendez-vous médical",
     # Numbers & scale (signal of policy/economics story)
     "billion", "billion",
     "milliard",
